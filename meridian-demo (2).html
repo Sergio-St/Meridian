@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian — RWE Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-base: #0A1628;
+  --bg-surface: #111E35;
+  --bg-raised: #162240;
+  --bg-hover: #1C2B4E;
+  --accent: #00C9A7;
+  --accent-dim: rgba(0,201,167,0.12);
+  --accent-dim2: rgba(0,201,167,0.06);
+  --amber: #F59E0B;
+  --amber-dim: rgba(245,158,11,0.12);
+  --red: #EF4444;
+  --red-dim: rgba(239,68,68,0.12);
+  --blue: #3B82F6;
+  --blue-dim: rgba(59,130,246,0.12);
+  --text-primary: #F0F4FF;
+  --text-secondary: #8B9FC0;
+  --text-tertiary: #4E6080;
+  --border: rgba(255,255,255,0.07);
+  --border-accent: rgba(0,201,167,0.3);
+  --font: 'Inter', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 220px; min-width: 220px;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  height: 100vh; position: sticky; top: 0;
+}
+.sidebar-logo { padding: 20px 18px 16px; border-bottom: 1px solid var(--border); }
+.logo-mark { display: flex; align-items: center; gap: 10px; margin-bottom: 2px; }
+.logo-icon { width: 28px; height: 28px; background: var(--accent); border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+.logo-icon svg { width: 16px; height: 16px; }
+.logo-name { font-size: 15px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.3px; }
+.logo-sub { font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.08em; text-transform: uppercase; margin-left: 38px; }
+
+.sidebar-client { margin: 12px; padding: 10px 12px; background: var(--accent-dim2); border: 1px solid var(--border-accent); border-radius: var(--radius); }
+.client-label { font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 3px; }
+.client-name { font-size: 13px; font-weight: 500; color: var(--accent); }
+.client-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 1px; }
+
+.sidebar-nav { padding: 8px; flex: 1; }
+.nav-section-label { font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; padding: 12px 10px 6px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: var(--radius); cursor: pointer; color: var(--text-secondary); font-size: 13px; font-weight: 400; transition: all 0.15s; margin-bottom: 1px; border: 1px solid transparent; }
+.nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+.nav-item.active { background: var(--accent-dim); color: var(--accent); border-color: var(--border-accent); font-weight: 500; }
+.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.7; }
+.nav-item.active svg { opacity: 1; }
+.nav-badge { margin-left: auto; background: var(--amber-dim); color: var(--amber); font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 10px; }
+.nav-badge.success { background: var(--accent-dim); color: var(--accent); }
+
+.sidebar-log { margin: 8px; padding: 10px 12px; background: var(--bg-base); border: 1px solid var(--border); border-radius: var(--radius); }
+.log-title { font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.log-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.log-line { font-family: var(--mono); font-size: 10px; color: var(--text-tertiary); line-height: 1.7; display: flex; gap: 6px; }
+.log-line.ok .log-icon { color: var(--accent); }
+.log-line.warn .log-icon { color: var(--amber); }
+
+/* MAIN */
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+.topbar { height: 52px; display: flex; align-items: center; padding: 0 24px; border-bottom: 1px solid var(--border); background: var(--bg-surface); gap: 16px; position: sticky; top: 0; z-index: 10; }
+.screen-tabs { display: flex; background: var(--bg-base); border: 1px solid var(--border); border-radius: var(--radius); padding: 3px; gap: 2px; }
+.screen-tab { padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.screen-tab:hover { color: var(--text-primary); }
+.screen-tab.active { background: var(--bg-raised); color: var(--text-primary); }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.status-pill { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--accent); background: var(--accent-dim); border: 1px solid var(--border-accent); padding: 4px 10px; border-radius: 20px; }
+.avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--blue-dim); border: 1px solid var(--blue); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: var(--blue); }
+
+/* SCREENS */
+.screen { display: none; padding: 24px; }
+.screen.active { display: block; }
+
+/* SHARED COMPONENTS */
+.panel { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.panel-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.panel-title { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+
+.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 20px; }
+.chip.ok { background: var(--accent-dim); color: var(--accent); }
+.chip.warn { background: var(--amber-dim); color: var(--amber); }
+.chip.err { background: var(--red-dim); color: var(--red); }
+.chip.info { background: var(--blue-dim); color: var(--blue); }
+
+.btn { padding: 5px 12px; border-radius: var(--radius); font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; font-family: var(--font); }
+.btn-primary { background: var(--accent); color: #0A1628; border-color: var(--accent); }
+.btn-primary:hover { opacity: 0.9; }
+.btn-ghost { background: transparent; color: var(--text-secondary); border-color: var(--border); }
+.btn-ghost:hover { background: var(--bg-hover); color: var(--text-primary); }
+.btn-danger-ghost { background: transparent; color: var(--red); border-color: rgba(239,68,68,0.3); }
+
+/* SCREEN 1 */
+.metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.metric-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; }
+.metric-label { font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+.metric-value { font-size: 26px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 6px; }
+.metric-value.green { color: var(--accent); }
+.metric-value.amber { color: var(--amber); }
+.metric-bar { height: 3px; background: var(--border); border-radius: 2px; }
+.metric-bar-fill { height: 3px; border-radius: 2px; background: var(--accent); }
+.metric-bar-fill.amber { background: var(--amber); }
+.metric-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 5px; }
+
+.two-col { display: grid; grid-template-columns: 1fr 380px; gap: 16px; }
+.table-header { display: grid; grid-template-columns: 1fr 120px 90px 80px; padding: 10px 18px; font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.07em; border-bottom: 1px solid var(--border); background: var(--bg-base); }
+.table-row { display: grid; grid-template-columns: 1fr 120px 90px 80px; padding: 13px 18px; border-bottom: 1px solid var(--border); align-items: center; transition: background 0.1s; }
+.table-row:last-child { border-bottom: none; }
+.table-row:hover { background: var(--bg-hover); }
+.table-row.warn { background: rgba(245,158,11,0.03); }
+.row-name { font-size: 13px; color: var(--text-primary); font-weight: 500; margin-bottom: 2px; }
+.row-sub { font-size: 11px; color: var(--text-tertiary); font-family: var(--mono); }
+.row-count { font-size: 12px; color: var(--text-secondary); }
+.progress-wrap { display: flex; align-items: center; gap: 8px; }
+.mini-bar { flex: 1; height: 3px; background: var(--border); border-radius: 2px; }
+.mini-bar-fill { height: 3px; border-radius: 2px; background: var(--accent); }
+.mini-bar-fill.amber { background: var(--amber); }
+.progress-pct { font-size: 12px; color: var(--text-secondary); min-width: 36px; text-align: right; font-family: var(--mono); }
+
+.right-col { display: flex; flex-direction: column; gap: 14px; }
+.conflict-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.conflict-item { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.conflict-item:last-child { border-bottom: none; }
+.conflict-head { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+.conflict-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: var(--amber-dim); color: var(--amber); flex-shrink: 0; margin-top: 1px; }
+.conflict-term { font-size: 13px; color: var(--text-primary); font-weight: 500; font-family: var(--mono); }
+.conflict-suggestion { font-size: 12px; color: var(--text-secondary); margin-bottom: 2px; }
+.conflict-code { font-size: 11px; color: var(--text-tertiary); font-family: var(--mono); }
+.conflict-actions { display: flex; gap: 6px; margin-top: 10px; }
+
+.log-panel { background: var(--bg-base); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; font-family: var(--mono); font-size: 11px; line-height: 1.9; }
+.log-entry { display: flex; gap: 8px; color: var(--text-tertiary); }
+.log-entry .ok { color: var(--accent); }
+.log-entry .warn { color: var(--amber); }
+.log-entry .time { color: var(--text-tertiary); min-width: 46px; }
+
+/* SCREEN 2 */
+.research-layout { display: grid; grid-template-columns: 1fr 360px; gap: 16px; height: calc(100vh - 100px); }
+.chat-panel { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); display: flex; flex-direction: column; overflow: hidden; }
+.chat-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.msg-wrap { display: flex; flex-direction: column; gap: 4px; }
+.msg-sender { font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.07em; padding: 0 4px; }
+.msg-user { align-self: flex-end; background: var(--accent-dim); border: 1px solid var(--border-accent); color: var(--text-primary); padding: 10px 14px; border-radius: 12px 12px 2px 12px; font-size: 13px; max-width: 82%; line-height: 1.5; }
+.msg-ai { align-self: flex-start; background: var(--bg-raised); border: 1px solid var(--border); color: var(--text-primary); padding: 12px 14px; border-radius: 2px 12px 12px 12px; font-size: 13px; max-width: 88%; line-height: 1.5; }
+.msg-params { background: var(--bg-base); border: 1px solid var(--border); border-radius: var(--radius); margin-top: 10px; overflow: hidden; }
+.param-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 12px; border-bottom: 1px solid var(--border); font-size: 12px; }
+.param-row:last-child { border-bottom: none; }
+.param-key { color: var(--text-tertiary); }
+.param-val { color: var(--text-primary); font-weight: 500; }
+.param-val.accent { color: var(--accent); }
+.confirm-btns { display: flex; gap: 6px; margin-top: 10px; }
+.chat-input-area { padding: 14px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; align-items: flex-end; }
+.chat-input { flex: 1; background: var(--bg-base); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 12px; color: var(--text-primary); font-size: 13px; font-family: var(--font); resize: none; outline: none; transition: border-color 0.15s; }
+.chat-input:focus { border-color: var(--border-accent); }
+.chat-input::placeholder { color: var(--text-tertiary); }
+.btn-send { background: var(--accent); color: #0A1628; border: none; border-radius: var(--radius); padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: var(--font); }
+
+.params-panel { display: flex; flex-direction: column; gap: 14px; }
+.params-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.params-card-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 500; color: var(--text-primary); display: flex; align-items: center; justify-content: space-between; }
+.params-card-body { padding: 14px 16px; }
+.cohort-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.cohort-box { background: var(--bg-base); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; text-align: center; }
+.cohort-num { font-size: 22px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+.cohort-label { font-size: 10px; color: var(--text-tertiary); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
+.method-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.outcome-item { display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; background: var(--bg-base); border-radius: var(--radius); margin-bottom: 6px; font-size: 12px; }
+.outcome-name { color: var(--text-primary); }
+.timeline-item { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.timeline-item:last-child { border-bottom: none; }
+.tl-dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+.tl-dot.ok { background: var(--accent); }
+.tl-dot.pend { background: var(--text-tertiary); }
+.tl-label { color: var(--text-secondary); }
+.tl-val { color: var(--text-primary); font-weight: 500; font-family: var(--mono); }
+.btn-run { width: 100%; padding: 11px; background: var(--accent); color: #0A1628; border: none; border-radius: var(--radius); font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font); margin-top: 4px; }
+.est-time { font-size: 11px; color: var(--text-tertiary); text-align: center; margin-top: 6px; }
+
+/* SCREEN 3 */
+.results-header { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; margin-bottom: 16px; }
+.results-title { font-size: 17px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.3px; margin-bottom: 6px; }
+.results-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.meta-item { font-size: 11px; color: var(--text-tertiary); }
+.meta-sep { color: var(--border); }
+.export-btns { margin-left: auto; display: flex; gap: 8px; }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+.kpi-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; }
+.kpi-card.highlight { border-color: var(--border-accent); background: var(--accent-dim2); }
+.kpi-label { font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+.kpi-value { font-size: 28px; font-weight: 600; letter-spacing: -0.8px; color: var(--text-primary); }
+.kpi-value.green { color: var(--accent); }
+.kpi-ci { font-size: 11px; color: var(--text-tertiary); margin-top: 4px; font-family: var(--mono); }
+
+.results-grid { display: grid; grid-template-columns: 1fr 340px; gap: 16px; }
+.chart-panel { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.chart-body { padding: 18px; }
+.bar-chart { display: flex; flex-direction: column; gap: 18px; }
+.bar-group-label { font-size: 12px; font-weight: 500; color: var(--text-primary); margin-bottom: 8px; }
+.bar-pair { display: flex; flex-direction: column; gap: 5px; }
+.bar-row { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+.bar-label { width: 130px; color: var(--text-secondary); flex-shrink: 0; }
+.bar-track { flex: 1; height: 18px; background: var(--bg-base); border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 3px; }
+.bar-fill.treatment { background: var(--accent); opacity: 0.85; }
+.bar-fill.control { background: var(--red); opacity: 0.7; }
+.bar-pct { width: 38px; font-family: var(--mono); font-size: 11px; font-weight: 500; text-align: right; }
+.bar-pct.treatment { color: var(--accent); }
+.bar-pct.control { color: var(--red); }
+.bar-delta { font-size: 10px; font-weight: 600; padding: 2px 6px; background: var(--accent-dim); color: var(--accent); border-radius: 4px; min-width: 40px; text-align: center; }
+.chart-legend { display: flex; gap: 16px; padding: 12px 18px; border-top: 1px solid var(--border); }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+.right-panels { display: flex; flex-direction: column; gap: 14px; }
+.interp-panel { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.interp-body { padding: 14px 16px; font-size: 13px; color: var(--text-secondary); line-height: 1.65; }
+.interp-body strong { color: var(--text-primary); font-weight: 500; }
+.warning-box { margin: 10px 16px 14px; padding: 10px 12px; background: var(--amber-dim); border: 1px solid rgba(245,158,11,0.25); border-radius: var(--radius); font-size: 11px; color: var(--amber); line-height: 1.5; }
+
+.quality-panel { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.q-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 16px; border-bottom: 1px solid var(--border); font-size: 12px; }
+.q-row:last-child { border-bottom: none; }
+.q-key { color: var(--text-tertiary); }
+.q-val { color: var(--text-primary); font-weight: 500; font-family: var(--mono); }
+
+.readiness-panel { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.r-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 12px; }
+.r-item:last-child { border-bottom: none; }
+.r-icon { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
+.r-icon.ok { background: var(--accent-dim); color: var(--accent); }
+.r-icon.warn { background: var(--amber-dim); color: var(--amber); }
+.r-icon.pend { background: var(--border); color: var(--text-tertiary); }
+.r-label { flex: 1; color: var(--text-secondary); }
+.r-status.ok { color: var(--accent); font-size: 11px; }
+.r-status.warn { color: var(--amber); font-size: 11px; }
+.r-status.pend { color: var(--text-tertiary); font-size: 11px; }
+.btn-submit { display: block; width: calc(100% - 32px); margin: 12px 16px; padding: 10px; background: var(--accent); color: #0A1628; border: none; border-radius: var(--radius); font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font); }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <div class="logo-icon">
+        <svg viewBox="0 0 16 16" fill="none">
+          <path d="M3 8h10M8 3v10M5 5l6 6M11 5l-6 6" stroke="#0A1628" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="logo-name">Meridian</span>
+    </div>
+    <div class="logo-sub">RWE Platform</div>
+  </div>
+
+  <div class="sidebar-client">
+    <div class="client-label">Client</div>
+    <div class="client-name">CVS Health</div>
+    <div class="client-sub">Caremark PBM data · 2.1M patients</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Workspace</div>
+
+    <div class="nav-item active" onclick="switchScreen('data', this)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="2" y="3" width="12" height="10" rx="1.5"/>
+        <path d="M2 6h12M6 6v7"/>
+      </svg>
+      Data
+      <span class="nav-badge">47</span>
+    </div>
+
+    <div class="nav-item" onclick="switchScreen('research', this)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="7" cy="7" r="4"/>
+        <path d="M10.5 10.5l3 3"/>
+      </svg>
+      Studies
+      <span class="nav-badge success">1</span>
+    </div>
+
+    <div class="nav-item" onclick="switchScreen('results', this)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M2 12l4-4 3 3 5-6"/>
+        <rect x="1" y="1" width="14" height="14" rx="2"/>
+      </svg>
+      Reports
+    </div>
+
+    <div class="nav-section-label">Projects</div>
+
+    <div class="nav-item">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M8 3v4l2.5 2.5"/>
+        <circle cx="8" cy="8" r="6"/>
+      </svg>
+      History
+    </div>
+
+    <div class="nav-item">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="8" cy="5" r="2.5"/>
+        <path d="M3 13c0-2.76 2.24-5 5-5s5 2.24 5 5"/>
+      </svg>
+      Team
+    </div>
+
+    <div class="nav-item">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="8" cy="8" r="3"/>
+        <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.22 3.22l1.42 1.42M11.36 11.36l1.42 1.42M3.22 12.78l1.42-1.42M11.36 4.64l1.42-1.42"/>
+      </svg>
+      Settings
+    </div>
+  </nav>
+
+  <div class="sidebar-log">
+    <div class="log-title">
+      <div class="log-dot"></div>
+      Agent running
+    </div>
+    <div class="log-line ok"><span class="log-icon">✓</span><span>DB schema detected</span></div>
+    <div class="log-line ok"><span class="log-icon">✓</span><span>Diagnoses mapped</span></div>
+    <div class="log-line ok"><span class="log-icon">✓</span><span>Medications mapped</span></div>
+    <div class="log-line warn"><span class="log-icon">→</span><span>Labs: 47 conflicts</span></div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <div class="topbar">
+    <div class="screen-tabs">
+      <div class="screen-tab active" onclick="switchScreen('data', null, this)">Screen 1 — Data</div>
+      <div class="screen-tab" onclick="switchScreen('research', null, this)">Screen 2 — Study Builder</div>
+      <div class="screen-tab" onclick="switchScreen('results', null, this)">Screen 3 — Results</div>
+    </div>
+    <div class="topbar-right">
+      <div class="status-pill"><div class="log-dot"></div>Agent active</div>
+      <div class="avatar">DR</div>
+    </div>
+  </div>
+
+  <!-- SCREEN 1: DATA INGESTION -->
+  <div class="screen active" id="screen-data">
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Tables standardized</div>
+        <div class="metric-value green">94%</div>
+        <div class="metric-bar"><div class="metric-bar-fill" style="width:94%"></div></div>
+        <div class="metric-sub">17 of 18 tables complete</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Patient records</div>
+        <div class="metric-value">2.1M</div>
+        <div class="metric-bar"><div class="metric-bar-fill" style="width:95%"></div></div>
+        <div class="metric-sub">of 2.2M loaded</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Needs review</div>
+        <div class="metric-value amber">47</div>
+        <div class="metric-bar"><div class="metric-bar-fill amber" style="width:15%"></div></div>
+        <div class="metric-sub">terminology conflicts</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Mapping accuracy</div>
+        <div class="metric-value green">98.3%</div>
+        <div class="metric-bar"><div class="metric-bar-fill" style="width:98%"></div></div>
+        <div class="metric-sub">across completed tables</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Tables — mapping to OMOP Common Data Model</span>
+            <span class="chip info">⟳ Updating</span>
+          </div>
+          <div class="table-header">
+            <div>Table / Maps to</div>
+            <div>Records</div>
+            <div>Accuracy</div>
+            <div>Status</div>
+          </div>
+          <div class="table-row">
+            <div>
+              <div class="row-name">Patient diagnoses</div>
+              <div class="row-sub">diagnosis → condition_occurrence</div>
+            </div>
+            <div class="row-count">1.8M</div>
+            <div class="progress-wrap">
+              <div class="mini-bar"><div class="mini-bar-fill" style="width:99.2%"></div></div>
+              <span class="progress-pct">99.2%</span>
+            </div>
+            <div><span class="chip ok">✓ Done</span></div>
+          </div>
+          <div class="table-row">
+            <div>
+              <div class="row-name">Medication orders</div>
+              <div class="row-sub">prescription → drug_exposure</div>
+            </div>
+            <div class="row-count">4.2M</div>
+            <div class="progress-wrap">
+              <div class="mini-bar"><div class="mini-bar-fill" style="width:97.8%"></div></div>
+              <span class="progress-pct">97.8%</span>
+            </div>
+            <div><span class="chip ok">✓ Done</span></div>
+          </div>
+          <div class="table-row warn">
+            <div>
+              <div class="row-name">Lab results</div>
+              <div class="row-sub">lab_result → measurement</div>
+            </div>
+            <div class="row-count">7.1M</div>
+            <div class="progress-wrap">
+              <div class="mini-bar"><div class="mini-bar-fill amber" style="width:81.3%"></div></div>
+              <span class="progress-pct" style="color:var(--amber)">81.3%</span>
+            </div>
+            <div><span class="chip warn">⚠ Review</span></div>
+          </div>
+          <div class="table-row">
+            <div>
+              <div class="row-name">Visits &amp; procedures</div>
+              <div class="row-sub">visit → visit_occurrence</div>
+            </div>
+            <div class="row-count">890K</div>
+            <div class="progress-wrap">
+              <div class="mini-bar"><div class="mini-bar-fill" style="width:96.1%"></div></div>
+              <span class="progress-pct">96.1%</span>
+            </div>
+            <div><span class="chip ok">✓ Done</span></div>
+          </div>
+          <div class="table-row">
+            <div>
+              <div class="row-name">Demographics</div>
+              <div class="row-sub">patient → person</div>
+            </div>
+            <div class="row-count">2.1M</div>
+            <div class="progress-wrap">
+              <div class="mini-bar"><div class="mini-bar-fill" style="width:100%"></div></div>
+              <span class="progress-pct">100%</span>
+            </div>
+            <div><span class="chip ok">✓ Done</span></div>
+          </div>
+          <div class="table-row">
+            <div>
+              <div class="row-name">Insurance claims</div>
+              <div class="row-sub">claim → payer_plan_period</div>
+            </div>
+            <div class="row-count">3.4M</div>
+            <div class="progress-wrap">
+              <div class="mini-bar"><div class="mini-bar-fill" style="width:93.5%"></div></div>
+              <span class="progress-pct">93.5%</span>
+            </div>
+            <div><span class="chip ok">✓ Done</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="right-col">
+        <div class="conflict-card">
+          <div class="panel-header">
+            <span class="panel-title">Conflicts — needs your review</span>
+            <span class="chip warn">47 remaining</span>
+          </div>
+
+          <div class="conflict-item">
+            <div class="conflict-head">
+              <span class="conflict-badge">Ambiguous</span>
+              <span class="conflict-term">HbA1c</span>
+            </div>
+            <div class="conflict-suggestion">AI suggests: Glycated hemoglobin</div>
+            <div class="conflict-code">Standard code: LOINC 4548-4</div>
+            <div class="conflict-actions">
+              <button class="btn btn-primary">Accept</button>
+              <button class="btn btn-ghost">Edit</button>
+              <button class="btn btn-danger-ghost">Skip</button>
+            </div>
+          </div>
+
+          <div class="conflict-item">
+            <div class="conflict-head">
+              <span class="conflict-badge">Ambiguous</span>
+              <span class="conflict-term">T2DM</span>
+            </div>
+            <div class="conflict-suggestion">AI suggests: Type 2 diabetes mellitus</div>
+            <div class="conflict-code">Standard code: SNOMED 44054006</div>
+            <div class="conflict-actions">
+              <button class="btn btn-primary">Accept</button>
+              <button class="btn btn-ghost">Edit</button>
+              <button class="btn btn-danger-ghost">Skip</button>
+            </div>
+          </div>
+
+          <div style="padding: 10px 16px; font-size: 11px; color: var(--text-tertiary); text-align: center; border-top: 1px solid var(--border);">
+            Accept all similar conflicts at once →
+          </div>
+        </div>
+
+        <div class="log-panel">
+          <div style="font-size:10px; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:8px;">AI Agent Log</div>
+          <div class="log-entry ok"><span class="time">09:14</span><span class="ok">✓</span><span>Connected to CVS database</span></div>
+          <div class="log-entry ok"><span class="time">09:15</span><span class="ok">✓</span><span>Schema of 18 tables analyzed</span></div>
+          <div class="log-entry ok"><span class="time">09:22</span><span class="ok">✓</span><span>Diagnoses: ICD-10 → SNOMED (99.2%)</span></div>
+          <div class="log-entry ok"><span class="time">09:31</span><span class="ok">✓</span><span>Medications: NDC → RxNorm (97.8%)</span></div>
+          <div class="log-entry"><span class="time">09:44</span><span class="warn">→</span><span>Labs: 47 non-standard codes found</span></div>
+          <div class="log-entry"><span class="time">09:44</span><span class="warn">⚠</span><span>Awaiting specialist review...</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: STUDY BUILDER -->
+  <div class="screen" id="screen-research">
+    <div class="research-layout">
+
+      <div class="chat-panel">
+        <div class="chat-header">
+          <div>
+            <div class="panel-title">New Study</div>
+            <div style="font-size:11px; color:var(--text-tertiary); margin-top:2px;">Database: CVS Health · 2.1M patients · OMOP CDM v5.4</div>
+          </div>
+          <span class="chip ok">● Agent ready</span>
+        </div>
+
+        <div class="chat-messages">
+          <div class="msg-wrap">
+            <div class="msg-sender" style="text-align:right;">Researcher</div>
+            <div class="msg-user">Show me patients with type 2 diabetes who took metformin for at least 6 months, and compare the rate of cardiovascular events vs those who didn't — from 2022 to 2024</div>
+          </div>
+
+          <div class="msg-wrap">
+            <div class="msg-sender">Meridian AI</div>
+            <div class="msg-ai">
+              Got it. I'll design a new-user cohort study with an active comparator. Here's how I'm interpreting your request:
+              <div class="msg-params">
+                <div class="param-row"><span class="param-key">Study design</span><span class="param-val accent">Cohort, active comparator</span></div>
+                <div class="param-row"><span class="param-key">Target cohort</span><span class="param-val">Type 2 diabetes + metformin ≥ 6 months</span></div>
+                <div class="param-row"><span class="param-key">Comparator cohort</span><span class="param-val">Type 2 diabetes, no metformin</span></div>
+                <div class="param-row"><span class="param-key">Outcomes</span><span class="param-val">MI, stroke, heart failure</span></div>
+                <div class="param-row"><span class="param-key">Observation period</span><span class="param-val">Jan 1, 2022 — Dec 31, 2024</span></div>
+                <div class="param-row"><span class="param-key">Expected sample size</span><span class="param-val accent">~8,400 patients</span></div>
+              </div>
+              <div style="margin-top:10px; font-size:12px; color:var(--text-tertiary);">Does this look right? Or do you need to adjust any parameters?</div>
+              <div class="confirm-btns">
+                <button class="btn btn-primary">Looks good</button>
+                <button class="btn btn-ghost">Adjust</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="msg-wrap">
+            <div class="msg-sender" style="text-align:right;">Researcher</div>
+            <div class="msg-user">Add a filter: patients over 50 only. And use propensity score matching to balance the groups.</div>
+          </div>
+
+          <div class="msg-wrap">
+            <div class="msg-sender">Meridian AI</div>
+            <div class="msg-ai">
+              Added age filter (&gt; 50 years) and propensity score matching (1:2 ratio, balancing groups on age, sex, comorbidities, and prior medications).
+              <div class="msg-params" style="margin-top:10px;">
+                <div class="param-row"><span class="param-key">Age filter</span><span class="param-val accent">Over 50 years</span></div>
+                <div class="param-row"><span class="param-key">Balancing method</span><span class="param-val accent">Propensity score matching (1:2)</span></div>
+                <div class="param-row"><span class="param-key">Updated sample size</span><span class="param-val accent">~6,200 patients</span></div>
+              </div>
+              <div style="margin-top:10px; font-size:12px; color:var(--text-tertiary);">Ready to run. Estimated time: 4–7 minutes.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input-area">
+          <textarea class="chat-input" rows="1" placeholder="Refine your query or ask a new question..."></textarea>
+          <button class="btn-send">Send</button>
+        </div>
+      </div>
+
+      <div class="params-panel">
+        <div class="params-card">
+          <div class="params-card-header">
+            Study Parameters
+            <span class="chip ok">Updated</span>
+          </div>
+          <div class="params-card-body">
+            <div class="cohort-grid">
+              <div class="cohort-box">
+                <div class="cohort-num">4,133</div>
+                <div class="cohort-label">Target cohort</div>
+              </div>
+              <div class="cohort-box">
+                <div class="cohort-num">2,067</div>
+                <div class="cohort-label">Comparator cohort</div>
+              </div>
+            </div>
+
+            <div style="font-size:11px; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Bias control method</div>
+            <div class="method-chips">
+              <span class="chip ok">✓ Propensity score</span>
+              <span class="chip" style="background:var(--bg-base); color:var(--text-tertiary); border:1px solid var(--border);">Regression</span>
+              <span class="chip" style="background:var(--bg-base); color:var(--text-tertiary); border:1px solid var(--border);">Matching</span>
+            </div>
+            <div style="font-size:11px; color:var(--text-tertiary); margin-bottom:14px; line-height:1.5;">Propensity score balances groups on observable characteristics to make the comparison fair</div>
+
+            <div style="font-size:11px; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Tracked outcomes</div>
+            <div class="outcome-item"><span class="outcome-name">Myocardial infarction (heart attack)</span><span class="chip ok">On</span></div>
+            <div class="outcome-item"><span class="outcome-name">Stroke</span><span class="chip ok">On</span></div>
+            <div class="outcome-item"><span class="outcome-name">Chronic heart failure</span><span class="chip ok">On</span></div>
+          </div>
+        </div>
+
+        <div class="params-card">
+          <div class="params-card-header">Data Parameters</div>
+          <div class="params-card-body" style="padding: 0;">
+            <div class="timeline-item" style="padding: 9px 16px;">
+              <div class="tl-dot ok"></div>
+              <div style="flex:1;"><div class="tl-label">Data source</div><div class="tl-val">CVS Caremark PBM</div></div>
+            </div>
+            <div class="timeline-item" style="padding: 9px 16px;">
+              <div class="tl-dot ok"></div>
+              <div style="flex:1;"><div class="tl-label">Standard</div><div class="tl-val">OMOP CDM v5.4</div></div>
+            </div>
+            <div class="timeline-item" style="padding: 9px 16px;">
+              <div class="tl-dot ok"></div>
+              <div style="flex:1;"><div class="tl-label">Observation window</div><div class="tl-val">2022–2024 (3 years)</div></div>
+            </div>
+            <div class="timeline-item" style="padding: 9px 16px;">
+              <div class="tl-dot ok"></div>
+              <div style="flex:1;"><div class="tl-label">Age filter</div><div class="tl-val">Over 50 years</div></div>
+            </div>
+            <div class="timeline-item" style="padding: 9px 16px; border-bottom: none;">
+              <div class="tl-dot pend"></div>
+              <div style="flex:1;"><div class="tl-label">Statistics</div><div class="tl-val" style="color:var(--text-tertiary);">After run</div></div>
+            </div>
+          </div>
+          <div style="padding: 0 14px 14px;">
+            <button class="btn-run">▶ Run Study</button>
+            <div class="est-time">Estimated time: 4–7 minutes</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: RESULTS -->
+  <div class="screen" id="screen-results">
+
+    <div class="results-header">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+        <div>
+          <div class="results-title">Metformin and Cardiovascular Events in Type 2 Diabetes</div>
+          <div class="results-meta">
+            <span class="meta-item">CVS Health</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">6,200 patients</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">Jan 1, 2022 — Dec 31, 2024</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item" style="color:var(--accent);">Completed in 4 min 38 sec</span>
+          </div>
+        </div>
+        <div class="export-btns">
+          <button class="btn btn-ghost">↓ PDF Report</button>
+          <button class="btn btn-ghost">↓ FDA Export</button>
+          <button class="btn btn-primary">Share</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card highlight">
+        <div class="kpi-label">Risk reduction</div>
+        <div class="kpi-value green">−23%</div>
+        <div class="kpi-ci">in target cohort</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Statistical significance</div>
+        <div class="kpi-value">p &lt; 0.001</div>
+        <div class="kpi-ci">result is not by chance</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Hazard Ratio (HR)</div>
+        <div class="kpi-value">0.77</div>
+        <div class="kpi-ci">95% CI: 0.68 — 0.87</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Patients analyzed</div>
+        <div class="kpi-value">6,200</div>
+        <div class="kpi-ci">after group balancing</div>
+      </div>
+    </div>
+
+    <div class="results-grid">
+
+      <div class="chart-panel">
+        <div class="panel-header">
+          <span class="panel-title">Event rates by outcome and cohort</span>
+          <span class="chip ok">Adjusted for age, sex, comorbidities</span>
+        </div>
+        <div class="chart-body">
+          <div class="bar-chart">
+
+            <div class="bar-group">
+              <div class="bar-group-label">Myocardial infarction (heart attack)</div>
+              <div class="bar-pair">
+                <div class="bar-row">
+                  <div class="bar-label">With metformin</div>
+                  <div class="bar-track"><div class="bar-fill treatment" style="width:51%"></div></div>
+                  <div class="bar-pct treatment">5.1%</div>
+                  <div class="bar-delta">−39%</div>
+                </div>
+                <div class="bar-row">
+                  <div class="bar-label">Without metformin</div>
+                  <div class="bar-track"><div class="bar-fill control" style="width:83%"></div></div>
+                  <div class="bar-pct control">8.3%</div>
+                  <div style="min-width:40px;"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bar-group">
+              <div class="bar-group-label">Stroke</div>
+              <div class="bar-pair">
+                <div class="bar-row">
+                  <div class="bar-label">With metformin</div>
+                  <div class="bar-track"><div class="bar-fill treatment" style="width:32%"></div></div>
+                  <div class="bar-pct treatment">3.2%</div>
+                  <div class="bar-delta">−32%</div>
+                </div>
+                <div class="bar-row">
+                  <div class="bar-label">Without metformin</div>
+                  <div class="bar-track"><div class="bar-fill control" style="width:47%"></div></div>
+                  <div class="bar-pct control">4.7%</div>
+                  <div style="min-width:40px;"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bar-group">
+              <div class="bar-group-label">Chronic heart failure</div>
+              <div class="bar-pair">
+                <div class="bar-row">
+                  <div class="bar-label">With metformin</div>
+                  <div class="bar-track"><div class="bar-fill treatment" style="width:68%"></div></div>
+                  <div class="bar-pct treatment">6.8%</div>
+                  <div class="bar-delta">−25%</div>
+                </div>
+                <div class="bar-row">
+                  <div class="bar-label">Without metformin</div>
+                  <div class="bar-track"><div class="bar-fill control" style="width:91%"></div></div>
+                  <div class="bar-pct control">9.1%</div>
+                  <div style="min-width:40px;"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item">
+            <div class="legend-dot" style="background:var(--accent); opacity:0.85;"></div>
+            With metformin — target cohort (n=4,133)
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:var(--red); opacity:0.7;"></div>
+            Without metformin — comparator (n=2,067)
+          </div>
+        </div>
+      </div>
+
+      <div class="right-panels">
+
+        <div class="interp-panel">
+          <div class="panel-header"><span class="panel-title">AI Interpretation</span></div>
+          <div class="interp-body">
+            Patients with type 2 diabetes over 50 who took metformin for at least 6 months showed a <strong>statistically significant reduction</strong> in cardiovascular event rates across all three outcomes.<br><br>
+            The largest effect was for myocardial infarction (<strong>−39% relative risk</strong>). These findings are consistent with the UKPDS trial and 2021–2023 meta-analyses.<br><br>
+            A hazard ratio of 0.77 (95% CI 0.68–0.87) means metformin users had a 23% lower risk of a cardiac event compared to non-users.
+          </div>
+          <div class="warning-box">
+            ⚠ This is an observational study. Causality is not established. Specialist review is recommended before regulatory submission.
+          </div>
+        </div>
+
+        <div class="quality-panel">
+          <div class="panel-header"><span class="panel-title">Data Quality</span></div>
+          <div class="q-row"><span class="q-key">Record completeness</span><span class="q-val" style="color:var(--accent);">96.4%</span></div>
+          <div class="q-row"><span class="q-key">Mean follow-up period</span><span class="q-val">28 months</span></div>
+          <div class="q-row"><span class="q-key">Group balance</span><span class="q-val" style="color:var(--accent);">Good (SMD &lt; 0.1)</span></div>
+          <div class="q-row"><span class="q-key">Loss to follow-up</span><span class="q-val" style="color:var(--amber);">8.2%</span></div>
+          <div class="q-row"><span class="q-key">Data standard</span><span class="q-val">OMOP CDM v5.4</span></div>
+        </div>
+
+        <div class="readiness-panel">
+          <div class="panel-header"><span class="panel-title">Submission Readiness</span></div>
+          <div class="r-item">
+            <div class="r-icon ok">✓</div>
+            <span class="r-label">Methodology</span>
+            <span class="r-status ok">FDA-compliant</span>
+          </div>
+          <div class="r-item">
+            <div class="r-icon ok">✓</div>
+            <span class="r-label">Statistics verified</span>
+            <span class="r-status ok">Automated</span>
+          </div>
+          <div class="r-item">
+            <div class="r-icon warn">!</div>
+            <span class="r-label">Specialist review</span>
+            <span class="r-status warn">Pending</span>
+          </div>
+          <div class="r-item">
+            <div class="r-icon pend">○</div>
+            <span class="r-label">Final report</span>
+            <span class="r-status pend">After review</span>
+          </div>
+          <button class="btn-submit">Send for Specialist Review</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function switchScreen(name, navEl, tabEl) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+
+  const screenToIdx = { data: 0, research: 1, results: 2 };
+  const idx = screenToIdx[name];
+
+  if (navEl) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    navEl.classList.add('active');
+  } else {
+    document.querySelectorAll('.nav-item').forEach((n, i) => n.classList.toggle('active', i === idx));
+  }
+
+  if (tabEl) {
+    document.querySelectorAll('.screen-tab').forEach(t => t.classList.remove('active'));
+    tabEl.classList.add('active');
+  } else {
+    document.querySelectorAll('.screen-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  }
+}
+</script>
+</body>
+</html>
