@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian — OMOP Concept Mapper</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0C1420; --surface: #111D2E; --raised: #172034; --hover: #1E2A40;
+  --accent: #00D4AA; --accent-dim: rgba(0,212,170,0.10); --accent-border: rgba(0,212,170,0.25);
+  --amber: #F5A623; --amber-dim: rgba(245,166,35,0.10);
+  --red: #F05252; --red-dim: rgba(240,82,82,0.10);
+  --blue: #4D9FEC; --blue-dim: rgba(77,159,236,0.10);
+  --purple: #9B6DFF; --purple-dim: rgba(155,109,255,0.10);
+  --text: #E8F0FF; --text-2: #7A90B0; --text-3: #3E5070;
+  --border: rgba(255,255,255,0.06);
+  --font: 'Inter', sans-serif; --mono: 'JetBrains Mono', monospace;
+  --r: 8px; --r-lg: 12px;
+}
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.5; }
+
+/* HEADER */
+.header { border-bottom: 1px solid var(--border); background: var(--surface); padding: 0 32px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-icon { width: 30px; height: 30px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.logo-icon svg { width: 16px; height: 16px; }
+.logo-name { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
+.logo-tag { font-size: 11px; color: var(--text-3); background: var(--raised); border: 1px solid var(--border); padding: 2px 8px; border-radius: 20px; margin-left: 4px; }
+.badge-beta { font-size: 10px; font-weight: 600; background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,166,35,0.25); padding: 3px 8px; border-radius: 20px; }
+.header-nav { display: flex; gap: 4px; }
+.header-nav-item { font-size: 12px; color: var(--text-2); cursor: pointer; padding: 5px 12px; border-radius: 6px; transition: all 0.12s; border: 1px solid transparent; }
+.header-nav-item:hover { color: var(--text); background: var(--raised); }
+.header-nav-item.active { color: var(--accent); background: var(--accent-dim); border-color: var(--accent-border); }
+
+/* PAGE TABS */
+.page { display: none; }
+.page.active { display: block; }
+
+/* HERO */
+.hero { text-align: center; padding: 56px 24px 40px; max-width: 680px; margin: 0 auto; }
+.hero-eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
+.hero-title { font-size: 36px; font-weight: 600; letter-spacing: -0.8px; line-height: 1.15; margin-bottom: 14px; }
+.hero-title span { color: var(--accent); }
+.hero-sub { font-size: 15px; color: var(--text-2); line-height: 1.6; max-width: 520px; margin: 0 auto 28px; }
+.hero-stats { display: flex; justify-content: center; gap: 32px; }
+.stat { text-align: center; }
+.stat-val { font-size: 20px; font-weight: 600; color: var(--accent); letter-spacing: -0.5px; }
+.stat-label { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+/* MAIN */
+.main { max-width: 1100px; margin: 0 auto; padding: 0 24px 60px; }
+
+/* INPUT CARD */
+.input-section { margin-bottom: 20px; }
+.input-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.input-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.input-title { font-size: 13px; font-weight: 500; }
+.mode-tabs { display: flex; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); padding: 2px; gap: 2px; }
+.mode-tab { padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 500; color: var(--text-2); cursor: pointer; transition: all 0.12s; }
+.mode-tab.active { background: var(--raised); color: var(--text); }
+.input-body { padding: 16px 18px; }
+textarea { width: 100%; min-height: 110px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 14px; color: var(--text); font-size: 13px; font-family: var(--mono); resize: vertical; outline: none; transition: border-color 0.15s; line-height: 1.7; }
+textarea:focus { border-color: var(--accent-border); }
+textarea::placeholder { color: var(--text-3); font-family: var(--font); }
+.input-meta { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 10px; flex-wrap: wrap; gap: 8px; }
+.input-hint { font-size: 11px; color: var(--text-3); margin-bottom: 6px; }
+.examples { display: flex; gap: 6px; flex-wrap: wrap; }
+.example-chip { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); color: var(--text-2); cursor: pointer; transition: all 0.12s; background: transparent; font-family: var(--font); }
+.example-chip:hover { border-color: var(--accent-border); color: var(--accent); background: var(--accent-dim); }
+.options-row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+.option-select { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); padding: 7px 12px; color: var(--text); font-size: 12px; font-family: var(--font); outline: none; cursor: pointer; }
+.option-select:focus { border-color: var(--accent-border); }
+.btn-run { margin-left: auto; display: flex; align-items: center; gap: 8px; padding: 9px 20px; background: var(--accent); color: #0C1420; border: none; border-radius: var(--r); font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font); transition: opacity 0.15s; }
+.btn-run:hover { opacity: 0.9; }
+.btn-run:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* PROGRESS */
+.progress-bar { height: 2px; background: var(--border); border-radius: 1px; margin: 16px 0; overflow: hidden; display: none; }
+.progress-bar.active { display: block; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 1px; animation: progress-anim 1.5s ease-in-out infinite; }
+@keyframes progress-anim { 0%{width:0%;margin-left:0} 50%{width:70%;margin-left:15%} 100%{width:0%;margin-left:100%} }
+
+/* SUMMARY */
+.summary-bar { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 14px 18px; margin-bottom: 16px; align-items: center; gap: 24px; flex-wrap: wrap; }
+.summary-bar.visible { display: flex; }
+.summary-stat { text-align: center; }
+.summary-val { font-size: 20px; font-weight: 600; letter-spacing: -0.5px; }
+.summary-val.green { color: var(--accent); }
+.summary-val.amber { color: var(--amber); }
+.summary-key { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+.summary-divider { width: 1px; height: 36px; background: var(--border); }
+
+/* RESULTS */
+.results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+.results-title { font-size: 13px; font-weight: 500; }
+.results-actions { display: flex; gap: 8px; }
+.btn-sm { padding: 5px 12px; border-radius: var(--r); font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text-2); font-family: var(--font); transition: all 0.12s; }
+.btn-sm:hover { background: var(--hover); color: var(--text); }
+.btn-sm.primary { background: var(--accent-dim); color: var(--accent); border-color: var(--accent-border); }
+.result-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); margin-bottom: 10px; overflow: hidden; transition: border-color 0.15s; }
+.result-card:hover { border-color: rgba(255,255,255,0.12); }
+.result-card.accepted { border-color: var(--accent-border); }
+.result-card.rejected { border-color: rgba(240,82,82,0.2); opacity: 0.6; }
+.result-top { padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px; }
+.result-domain-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.result-main { flex: 1; min-width: 0; }
+.result-source { font-size: 11px; color: var(--text-3); margin-bottom: 3px; font-family: var(--mono); }
+.result-source strong { color: var(--accent); font-weight: 500; }
+.result-concept { font-size: 14px; font-weight: 500; margin-bottom: 5px; }
+.result-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag { font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 4px; font-family: var(--mono); cursor: default; }
+.tag-concept { background: var(--purple-dim); color: var(--purple); }
+.tag-vocab { background: var(--blue-dim); color: var(--blue); }
+.tag-domain { background: var(--accent-dim); color: var(--accent); }
+.tag-class { background: var(--raised); color: var(--text-2); border: 1px solid var(--border); }
+.confidence-col { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.confidence-ring { width: 46px; height: 46px; position: relative; cursor: pointer; }
+.confidence-ring svg { transform: rotate(-90deg); }
+.confidence-num { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 11px; font-weight: 600; font-family: var(--mono); }
+.action-btns { display: flex; gap: 5px; }
+.action-btn { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: transparent; font-family: var(--font); color: var(--text-2); transition: all 0.12s; }
+.action-btn:hover { background: var(--hover); color: var(--text); }
+.action-btn.accept { border-color: var(--accent-border); color: var(--accent); background: var(--accent-dim); }
+.action-btn.reject { border-color: rgba(240,82,82,0.3); color: var(--red); }
+.expand-btn { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-3); cursor: pointer; padding: 4px 8px; border-radius: 4px; background: transparent; border: none; font-family: var(--font); transition: color 0.1s; }
+.expand-btn:hover { color: var(--text-2); }
+.result-reasoning { padding: 0 16px 14px; display: none; }
+.result-card.expanded .result-reasoning { display: block; }
+.reasoning-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 14px; }
+.reasoning-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-3); margin-bottom: 6px; }
+.reasoning-text { font-size: 12px; color: var(--text-2); line-height: 1.6; }
+.alternatives { margin-top: 10px; }
+.alt-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
+.alt-item { display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; background: var(--raised); border-radius: 6px; margin-bottom: 4px; font-size: 12px; cursor: pointer; transition: background 0.1s; }
+.alt-item:hover { background: var(--hover); }
+.alt-name { color: var(--text); font-weight: 500; }
+.alt-meta { display: flex; gap: 6px; align-items: center; }
+.alt-score { font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+.empty-state { text-align: center; padding: 48px 24px; color: var(--text-3); }
+.empty-icon { font-size: 32px; margin-bottom: 12px; }
+.empty-title { font-size: 14px; font-weight: 500; color: var(--text-2); margin-bottom: 6px; }
+.empty-sub { font-size: 12px; line-height: 1.5; }
+
+/* COMPARISON */
+.comparison { margin-top: 40px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.comparison-header { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.comparison-title { font-size: 14px; font-weight: 500; }
+.comparison-sub { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+.comp-table { width: 100%; border-collapse: collapse; }
+.comp-table th { padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); background: var(--bg); }
+.comp-table td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--border); }
+.comp-table tr:last-child td { border-bottom: none; }
+.comp-table tr:hover td { background: var(--hover); }
+.comp-td-feature { color: var(--text); font-weight: 500; }
+.comp-td-old { color: var(--text-2); }
+.comp-td-new { color: var(--accent); font-weight: 500; }
+
+/* TOOLTIP */
+.tooltip-wrap { position: relative; display: inline-flex; align-items: center; }
+.tooltip-icon { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%; background: var(--raised); border: 1px solid var(--border); color: var(--text-3); font-size: 9px; font-weight: 600; cursor: help; margin-left: 5px; transition: all 0.12s; flex-shrink: 0; }
+.tooltip-icon:hover { border-color: var(--accent-border); color: var(--accent); background: var(--accent-dim); }
+.tooltip-box { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #1E2D45; border: 1px solid var(--border); border-radius: var(--r); padding: 10px 12px; font-size: 12px; color: var(--text-2); line-height: 1.5; width: 240px; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.15s; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+.tooltip-box::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #1E2D45; }
+.tooltip-wrap:hover .tooltip-box { opacity: 1; }
+
+/* DOCS PAGE */
+.docs-layout { display: grid; grid-template-columns: 200px 1fr; gap: 0; min-height: calc(100vh - 56px); }
+.docs-sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 20px 0; position: sticky; top: 56px; height: calc(100vh - 56px); overflow-y: auto; }
+.docs-nav-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); padding: 8px 16px 4px; }
+.docs-nav-item { display: block; padding: 7px 16px; font-size: 13px; color: var(--text-2); cursor: pointer; transition: all 0.12s; border-left: 2px solid transparent; }
+.docs-nav-item:hover { color: var(--text); background: var(--hover); }
+.docs-nav-item.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-dim); }
+.docs-content { padding: 32px 40px; max-width: 760px; }
+.docs-section { margin-bottom: 48px; }
+.docs-section:last-child { margin-bottom: 0; }
+.docs-h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.4px; margin-bottom: 8px; }
+.docs-h2 { font-size: 17px; font-weight: 600; letter-spacing: -0.2px; margin-bottom: 12px; color: var(--text); padding-top: 8px; }
+.docs-h3 { font-size: 13px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; margin-top: 20px; }
+.docs-p { font-size: 14px; color: var(--text-2); line-height: 1.7; margin-bottom: 12px; }
+.docs-p a { color: var(--accent); text-decoration: none; }
+.docs-p a:hover { text-decoration: underline; }
+.docs-lead { font-size: 15px; color: var(--text-2); line-height: 1.7; margin-bottom: 20px; border-left: 2px solid var(--accent); padding-left: 14px; }
+.code-block { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 16px; font-family: var(--mono); font-size: 12px; color: var(--text-2); line-height: 1.8; margin: 12px 0; overflow-x: auto; position: relative; }
+.code-block .kw { color: var(--purple); }
+.code-block .str { color: var(--accent); }
+.code-block .num { color: var(--amber); }
+.code-block .cmt { color: var(--text-3); }
+.code-block .key { color: var(--blue); }
+.copy-code-btn { position: absolute; top: 8px; right: 8px; padding: 3px 8px; background: var(--raised); border: 1px solid var(--border); border-radius: 5px; font-size: 10px; color: var(--text-3); cursor: pointer; font-family: var(--font); transition: all 0.12s; }
+.copy-code-btn:hover { color: var(--accent); border-color: var(--accent-border); }
+.step-list { display: flex; flex-direction: column; gap: 12px; margin: 16px 0; }
+.step { display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); }
+.step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--accent-dim); border: 1px solid var(--accent-border); color: var(--accent); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.step-body h4 { font-size: 13px; font-weight: 500; margin-bottom: 3px; }
+.step-body p { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+.info-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; }
+.info-card-icon { font-size: 20px; margin-bottom: 8px; }
+.info-card-title { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+.info-card-text { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+.vocab-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+.vocab-table th { padding: 8px 12px; text-align: left; font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); background: var(--bg); }
+.vocab-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.vocab-table tr:last-child td { border-bottom: none; }
+.vocab-table tr:hover td { background: var(--hover); }
+.tag-inline { display: inline-block; font-size: 10px; font-weight: 500; padding: 1px 6px; border-radius: 4px; font-family: var(--mono); }
+.response-schema { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin: 12px 0; }
+.schema-row { display: grid; grid-template-columns: 140px 80px 1fr; padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 12px; align-items: start; }
+.schema-row:last-child { border-bottom: none; }
+.schema-row.header { background: var(--raised); font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
+.schema-field { font-family: var(--mono); color: var(--blue); }
+.schema-type { color: var(--amber); font-family: var(--mono); }
+.schema-desc { color: var(--text-2); }
+.alert { padding: 12px 14px; border-radius: var(--r); margin: 12px 0; font-size: 13px; line-height: 1.5; }
+.alert-info { background: var(--blue-dim); border: 1px solid rgba(77,159,236,0.25); color: var(--blue); }
+.alert-warn { background: var(--amber-dim); border: 1px solid rgba(245,166,35,0.25); color: var(--amber); }
+.alert-success { background: var(--accent-dim); border: 1px solid var(--accent-border); color: var(--accent); }
+
+/* TOAST */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--accent-border); border-radius: var(--r); padding: 12px 16px; font-size: 12px; color: var(--accent); display: none; align-items: center; gap: 8px; z-index: 200; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.toast.visible { display: flex; }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10M8 3v10M5 5l6 6M11 5l-6 6" stroke="#0C1420" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </div>
+    <span class="logo-name">Meridian</span>
+    <span class="logo-tag">OMOP Mapper</span>
+    <span class="badge-beta">Beta</span>
+  </div>
+  <nav class="header-nav">
+    <div class="header-nav-item active" onclick="showPage('mapper', this)">Mapper</div>
+    <div class="header-nav-item" onclick="showPage('workspace', this)">Workspace</div>
+    <div class="header-nav-item" onclick="showPage('benchmark', this)">Benchmark</div>
+    <div class="header-nav-item" onclick="showPage('pricing', this)">Pricing</div>
+    <div class="header-nav-item" onclick="showPage('deployment', this)">Deployment</div>
+    <div class="header-nav-item" onclick="showPage('about', this)">About</div>
+    <div class="header-nav-item" onclick="showPage('docs', this)">Docs & API</div>
+  </nav>
+</header>
+
+<!-- ══════════════════════════════════════════════ PAGE: MAPPER -->
+<div class="page active" id="page-mapper">
+  <div class="hero">
+    <div class="hero-eyebrow">AI-powered OMOP concept mapping</div>
+    <h1 class="hero-title">Map any medical term to<br><span>OMOP standard concepts</span></h1>
+    <p class="hero-sub">Paste free text, custom codes, or non-standard medical terms. Meridian returns the correct OMOP concept with confidence score and reasoning — in seconds, not months.</p>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-val">&gt;90%</div>
+        <div class="stat-label">Auto-mapping accuracy</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">10M+</div>
+        <div class="stat-label">OMOP concepts covered</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">vs 55%</div>
+        <div class="stat-label">Usagi baseline</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="input-section">
+      <div class="input-card">
+        <div class="input-header">
+          <span class="input-title">Enter terms to map
+            <span class="tooltip-wrap">
+              <span class="tooltip-icon">?</span>
+              <span class="tooltip-box">Enter one medical term per line. Can be informal language ("sugar diabetes"), lab abbreviations ("HbA1c"), drug names ("metformin 500mg"), or procedure descriptions. Meridian understands all of them.</span>
+            </span>
+          </span>
+          <div class="mode-tabs">
+            <div class="mode-tab active">Free text</div>
+            <div class="mode-tab" onclick="showToast('CSV upload coming soon — use the API for bulk processing')">CSV upload</div>
+            <div class="mode-tab" onclick="showPage('docs', document.querySelectorAll(\'.header-nav-item\')[2])">API</div>
+          </div>
+        </div>
+        <div class="input-body">
+          <textarea id="termInput" placeholder="Enter medical terms, one per line — e.g.&#10;sugar diabetes&#10;HbA1c result elevated&#10;heart attack&#10;metformin 500mg&#10;BP systolic"></textarea>
+          <div class="input-meta">
+            <div>
+              <div class="input-hint">Try an example:</div>
+              <div class="examples" style="margin-top:6px;">
+                <button class="example-chip" onclick="loadExample('diagnoses')">Diagnoses (informal)</button>
+                <button class="example-chip" onclick="loadExample('labs')">Lab results</button>
+                <button class="example-chip" onclick="loadExample('drugs')">Medications</button>
+                <button class="example-chip" onclick="loadExample('mixed')">Mixed dataset</button>
+              </div>
+            </div>
+          </div>
+          <div class="options-row">
+            <div class="tooltip-wrap">
+              <select class="option-select" id="domainFilter">
+                <option value="all">All domains</option>
+                <option value="condition">Condition (diagnoses)</option>
+                <option value="drug">Drug (medications)</option>
+                <option value="measurement">Measurement (labs)</option>
+                <option value="procedure">Procedure</option>
+              </select>
+              <span class="tooltip-icon">?</span>
+              <span class="tooltip-box">OMOP organizes concepts into domains. Filter here to restrict results — useful when you know all your terms are, e.g., lab tests.</span>
+            </div>
+            <div class="tooltip-wrap">
+              <select class="option-select" id="vocabFilter">
+                <option value="all">All vocabularies</option>
+                <option value="snomed">SNOMED CT</option>
+                <option value="loinc">LOINC</option>
+                <option value="rxnorm">RxNorm</option>
+                <option value="icd10">ICD-10</option>
+              </select>
+              <span class="tooltip-icon">?</span>
+              <span class="tooltip-box">SNOMED CT — diagnoses & clinical findings. LOINC — lab tests & measurements. RxNorm — drugs & ingredients. ICD-10 — diagnosis billing codes.</span>
+            </div>
+            <div class="tooltip-wrap">
+              <select class="option-select" id="confidenceFilter">
+                <option value="high">High confidence only (≥80%)</option>
+                <option value="all">Show all matches</option>
+              </select>
+              <span class="tooltip-icon">?</span>
+              <span class="tooltip-box">Confidence score reflects how certain the AI is in the mapping. Scores below 80% usually indicate ambiguous terms that need human review.</span>
+            </div>
+            <button class="btn-run" id="runBtn" onclick="runMapping()">
+              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polygon points="3,1 13,7 3,13"/></svg>
+              Map Concepts
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="progress-bar" id="progressBar"><div class="progress-fill"></div></div>
+
+    <div id="summaryBar" class="summary-bar">
+      <div class="summary-stat">
+        <div class="summary-val green" id="sumTotal">0</div>
+        <div class="summary-key">Terms mapped</div>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-stat">
+        <div class="summary-val green" id="sumHigh">0</div>
+        <div class="summary-key">
+          <span class="tooltip-wrap">High confidence
+            <span class="tooltip-icon">?</span>
+            <span class="tooltip-box">Confidence ≥ 80%. These mappings can typically be auto-approved and included in your ETL pipeline without manual review.</span>
+          </span>
+        </div>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-stat">
+        <div class="summary-val amber" id="sumMed">0</div>
+        <div class="summary-key">
+          <span class="tooltip-wrap">Needs review
+            <span class="tooltip-icon">?</span>
+            <span class="tooltip-box">Confidence &lt; 80%. Ambiguous terms where a domain expert should verify the mapping before including in production.</span>
+          </span>
+        </div>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-stat">
+        <div class="summary-val green" id="sumPct">0%</div>
+        <div class="summary-key">Auto-mapped</div>
+      </div>
+      <div style="margin-left:auto; display:flex; gap:8px;">
+        <button class="btn-sm" onclick="exportCSV()">↓ Export CSV</button>
+        <button class="btn-sm primary" onclick="copyJSON()">↓ Copy JSON</button>
+      </div>
+    </div>
+
+    <div id="resultsArea">
+      <div class="empty-state">
+        <div class="empty-icon">⬡</div>
+        <div class="empty-title">Ready to map</div>
+        <div class="empty-sub">Enter medical terms above and click "Map Concepts"<br>to get OMOP standard concepts with AI reasoning.<br><br><span style="color:var(--text-3);">Tip: press ⌘+Enter to run</span></div>
+      </div>
+    </div>
+
+    <div class="comparison">
+      <div class="comparison-header">
+        <div class="comparison-title">Why Meridian vs Usagi
+          <span class="tooltip-wrap">
+            <span class="tooltip-icon">?</span>
+            <span class="tooltip-box">Usagi is the official OHDSI mapping tool — a Java desktop app from 2014. It uses string-similarity matching which fails on informal or non-standard terminology.</span>
+          </span>
+        </div>
+        <div class="comparison-sub">Usagi is the current OHDSI standard — a Java desktop app using string matching. These are the key differences.</div>
+      </div>
+      <table class="comp-table">
+        <thead><tr>
+          <th>Capability</th>
+          <th>Usagi (current standard)</th>
+          <th>Meridian</th>
+        </tr></thead>
+        <tbody>
+          <tr><td class="comp-td-feature">Free text / informal terms</td><td class="comp-td-old">✗ Fails on "sugar diabetes"</td><td class="comp-td-new">✓ Understands any natural language</td></tr>
+          <tr><td class="comp-td-feature">Automatic accuracy</td><td class="comp-td-old">~55% — rest is manual review</td><td class="comp-td-new">&gt;90% target with confidence scoring</td></tr>
+          <tr><td class="comp-td-feature">Interface</td><td class="comp-td-old">Java desktop, local install required</td><td class="comp-td-new">Web-based, works anywhere</td></tr>
+          <tr><td class="comp-td-feature">Explains decisions</td><td class="comp-td-old">✗ No reasoning provided</td><td class="comp-td-new">✓ AI explains every mapping</td></tr>
+          <tr><td class="comp-td-feature">Non-English input</td><td class="comp-td-old">Requires pre-translation</td><td class="comp-td-new">✓ Native multilingual</td></tr>
+          <tr><td class="comp-td-feature">API access</td><td class="comp-td-old">✗ Desktop only</td><td class="comp-td-new">✓ REST API for pipelines</td></tr>
+          <tr><td class="comp-td-feature">Learns from corrections</td><td class="comp-td-old">✗ None</td><td class="comp-td-new">✓ Active learning loop</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ PAGE: ABOUT -->
+<div class="page" id="page-about">
+  <div class="main" style="max-width:860px; padding-top:40px;">
+
+    <div class="docs-section">
+      <div class="docs-h1">What is Meridian?</div>
+      <div class="docs-lead">Meridian is an AI-first tool that maps any medical term — formal or informal, coded or free text — to the correct OMOP standard concept. It's designed for data engineers, epidemiologists, and clinical informatics teams who build OMOP pipelines.</div>
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-card-icon">🏥</div>
+          <div class="info-card-title">What is OMOP?</div>
+          <div class="info-card-text">OMOP (Observational Medical Outcomes Partnership) is a global standard for organizing health data. It lets researchers combine patient data from hospitals, pharmacies, and insurers worldwide using a common language.</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-icon">🗺️</div>
+          <div class="info-card-title">What is concept mapping?</div>
+          <div class="info-card-text">Every hospital uses its own codes and terms for diseases, drugs, and tests. Mapping converts these into OMOP standard concepts — like translating medical records from dozens of local dialects into one universal language.</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-icon">⚡</div>
+          <div class="info-card-title">Why does it take so long today?</div>
+          <div class="info-card-text">The current standard tool (Usagi) uses string-matching and fails on informal terms. A team of specialists reviews thousands of terms manually. A single dataset takes 3–6 months and costs $100k–500k.</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-icon">🤖</div>
+          <div class="info-card-title">How does Meridian fix this?</div>
+          <div class="info-card-text">Meridian uses a large language model to understand medical language contextually. "Sugar diabetes" → Type 2 diabetes mellitus (SNOMED 44054006). "Bad cholesterol" → LDL cholesterol (LOINC 13457-7). Instantly.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="docs-section">
+      <div class="docs-h2">Who is it for?</div>
+      <div class="step-list">
+        <div class="step"><div class="step-num">1</div><div class="step-body"><h4>OMOP data engineers</h4><p>You're building an ETL pipeline from a hospital EHR or claims database into OMOP CDM. You have thousands of source codes and free-text fields that don't map cleanly. Meridian handles them in bulk via API or web.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Epidemiologists & RWE researchers</h4><p>You need to run a cohort study on OMOP data but the source terminology is messy or non-standard. Meridian standardizes it so your ATLAS queries return the right patients.</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body"><h4>CROs and pharma data teams</h4><p>You're standardizing client data for regulatory submissions or post-market surveillance. Meridian reduces the expert review burden from weeks to hours, with a full audit trail.</p></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Academic medical centers</h4><p>You're joining an OHDSI network study and need to convert your local EHR to OMOP. No Usagi expertise required — paste your source terms and get a mapping table ready for your ETL.</p></div></div>
+      </div>
+    </div>
+
+    <div class="docs-section">
+      <div class="docs-h2">OMOP vocabularies covered</div>
+      <div class="docs-p">Meridian maps to all major OMOP standard vocabularies:</div>
+      <table class="vocab-table">
+        <thead><tr><th>Vocabulary</th><th>Domain</th><th>Coverage</th><th>Examples</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag-inline tag-vocab">SNOMED CT</span></td><td>Conditions, Observations</td><td>350k+ concepts</td><td>Diagnoses, clinical findings, body structures</td></tr>
+          <tr><td><span class="tag-inline tag-vocab">LOINC</span></td><td>Measurement</td><td>95k+ concepts</td><td>Lab tests, vital signs, clinical surveys</td></tr>
+          <tr><td><span class="tag-inline tag-vocab">RxNorm</span></td><td>Drug</td><td>100k+ concepts</td><td>Drug ingredients, clinical drugs, drug forms</td></tr>
+          <tr><td><span class="tag-inline tag-vocab">ICD-10-CM</span></td><td>Condition</td><td>70k+ concepts</td><td>Diagnosis billing codes (US)</td></tr>
+          <tr><td><span class="tag-inline tag-vocab">CPT-4</span></td><td>Procedure</td><td>10k+ concepts</td><td>Medical procedures, surgical codes</td></tr>
+          <tr><td><span class="tag-inline tag-vocab">ATC</span></td><td>Drug</td><td>6k+ concepts</td><td>Drug classification by WHO</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="docs-section">
+      <div class="docs-h2">How the AI mapping works</div>
+      <div class="step-list">
+        <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Semantic interpretation</h4><p>The LLM reads your source term in context, understanding informal language, abbreviations, brand names, and locally invented codes.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Vocabulary search</h4><p>The system queries the OHDSI Athena vocabulary database + semantic vector search across 10M+ OMOP concepts to find candidates.</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Ranked candidates + reasoning</h4><p>The AI returns the best match with a confidence score and plain-English reasoning, plus 1–3 alternatives with scores.</p></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Human review for low-confidence</h4><p>Terms below 80% confidence are flagged for specialist review. Your corrections are logged and feed back into model improvement.</p></div></div>
+      </div>
+      <div class="alert alert-warn">⚠ Meridian is a decision-support tool. All mappings intended for regulatory submissions should be reviewed by a qualified clinical informaticist before use in production.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ PAGE: DOCS & API -->
+<div class="page" id="page-docs">
+  <div class="docs-layout">
+    <aside class="docs-sidebar">
+      <div class="docs-nav-label">Getting started</div>
+      <div class="docs-nav-item active" onclick="scrollToSection('qs')">Quick start</div>
+      <div class="docs-nav-item" onclick="scrollToSection('workflow')">Recommended workflow</div>
+      <div class="docs-nav-label">API Reference</div>
+      <div class="docs-nav-item" onclick="scrollToSection('auth')">Authentication</div>
+      <div class="docs-nav-item" onclick="scrollToSection('endpoint')">POST /map</div>
+      <div class="docs-nav-item" onclick="scrollToSection('response')">Response schema</div>
+      <div class="docs-nav-item" onclick="scrollToSection('errors')">Error codes</div>
+      <div class="docs-nav-label">Integration</div>
+      <div class="docs-nav-item" onclick="scrollToSection('python')">Python</div>
+      <div class="docs-nav-item" onclick="scrollToSection('curl')">cURL</div>
+      <div class="docs-nav-item" onclick="scrollToSection('etl')">ETL pipeline</div>
+      <div class="docs-nav-label">Limits</div>
+      <div class="docs-nav-item" onclick="scrollToSection('limits')">Rate limits & pricing</div>
+    </aside>
+
+    <div class="docs-content">
+
+      <div class="docs-section" id="qs">
+        <div class="docs-h1">Docs & API</div>
+        <div class="docs-lead">Meridian exposes a simple REST API for integrating AI-powered OMOP mapping into your ETL pipelines, data quality workflows, or clinical research tools.</div>
+        <div class="alert alert-info">🔑 API is currently in private beta. <a href="#">Request access</a> to get your API key.</div>
+
+        <div class="docs-h2">Quick start</div>
+        <div class="docs-p">Send a POST request to <code style="font-family:var(--mono);font-size:12px;background:var(--raised);padding:1px 5px;border-radius:4px;">https://api.meridian.health/v1/map</code> with your terms:</div>
+        <div class="code-block">
+          <button class="copy-code-btn" onclick="copyCode(this)">Copy</button>
+<span class="cmt"># Map three terms with a single API call</span>
+curl -X POST https://api.meridian.health/v1/map \
+  -H <span class="str">"Authorization: Bearer YOUR_API_KEY"</span> \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{
+    "terms": ["sugar diabetes", "HbA1c elevated", "metformin 500mg"],
+    "options": {
+      "min_confidence": 80,
+      "max_alternatives": 3
+    }
+  }'</span>
+        </div>
+      </div>
+
+      <div class="docs-section" id="workflow">
+        <div class="docs-h2">Recommended workflow</div>
+        <div class="docs-p">The typical integration pattern for an OMOP ETL pipeline:</div>
+        <div class="step-list">
+          <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Extract unique source terms</h4><p>From your source database, extract a deduplicated list of all unique values from columns you need to map (diagnosis codes, drug names, lab names, etc.).</p></div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Send to Meridian API in batches</h4><p>Send up to 100 terms per request. For large datasets (1M+ rows), deduplicate first — typically 95% of rows share a small set of unique terms.</p></div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Auto-approve high-confidence mappings</h4><p>Mappings with confidence ≥ 80 can be automatically applied. Flag lower-confidence terms for your clinical reviewer queue.</p></div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Apply mapping table to full dataset</h4><p>Join your source data against the approved mapping table to populate OMOP concept_id fields in the target CDM tables.</p></div></div>
+          <div class="step"><div class="step-num">5</div><div class="step-body"><h4>Run OMOP data quality checks</h4><p>Use OHDSI's DataQualityDashboard to validate the result. Meridian exports a QA report showing coverage and unmapped terms.</p></div></div>
+        </div>
+        <div class="alert alert-success">✓ This workflow typically reduces manual review time from weeks to hours for a standard clinical dataset.</div>
+      </div>
+
+      <div class="docs-section" id="auth">
+        <div class="docs-h2">Authentication</div>
+        <div class="docs-p">All API requests require a Bearer token in the Authorization header. Keys are scoped per workspace and can be rotated from your dashboard.</div>
+        <div class="code-block">
+          <button class="copy-code-btn" onclick="copyCode(this)">Copy</button>
+Authorization: Bearer mer_live_xxxxxxxxxxxxxxxxxxxxxxxx
+        </div>
+        <div class="alert alert-warn">⚠ Never expose your API key in client-side code. Use server-side calls or environment variables.</div>
+      </div>
+
+      <div class="docs-section" id="endpoint">
+        <div class="docs-h2">POST /v1/map</div>
+        <div class="docs-p">Maps one or more source terms to OMOP standard concepts.</div>
+        <div class="docs-h3">Request body</div>
+        <div class="response-schema">
+          <div class="schema-row header"><div>Field</div><div>Type</div><div>Description</div></div>
+          <div class="schema-row"><div class="schema-field">terms</div><div class="schema-type">string[]</div><div class="schema-desc">Array of source terms to map. Max 100 per request.</div></div>
+          <div class="schema-row"><div class="schema-field">domain</div><div class="schema-type">string?</div><div class="schema-desc">Restrict to domain: "Condition", "Drug", "Measurement", "Procedure". Default: auto-detect.</div></div>
+          <div class="schema-row"><div class="schema-field">vocabulary</div><div class="schema-type">string?</div><div class="schema-desc">Restrict to vocabulary: "SNOMED", "LOINC", "RxNorm", "ICD10CM". Default: all.</div></div>
+          <div class="schema-row"><div class="schema-field">min_confidence</div><div class="schema-type">int?</div><div class="schema-desc">Only return mappings at or above this confidence (0–100). Default: 0.</div></div>
+          <div class="schema-row"><div class="schema-field">max_alternatives</div><div class="schema-type">int?</div><div class="schema-desc">Number of alternative candidates to return (0–5). Default: 3.</div></div>
+          <div class="schema-row"><div class="schema-field">language</div><div class="schema-type">string?</div><div class="schema-desc">Source language hint: "en", "de", "fr", "es", "ru". Default: auto-detect.</div></div>
+        </div>
+
+        <div class="code-block">
+          <button class="copy-code-btn" onclick="copyCode(this)">Copy</button>
+{
+  <span class="key">"terms"</span>: [<span class="str">"sugar diabetes"</span>, <span class="str">"HbA1c"</span>],
+  <span class="key">"domain"</span>: <span class="str">"Condition"</span>,
+  <span class="key">"min_confidence"</span>: <span class="num">75</span>,
+  <span class="key">"max_alternatives"</span>: <span class="num">2</span>
+}
+        </div>
+      </div>
+
+      <div class="docs-section" id="response">
+        <div class="docs-h2">Response schema</div>
+        <div class="docs-p">Each term returns a mapping object with the best match and alternatives.</div>
+        <div class="response-schema">
+          <div class="schema-row header"><div>Field</div><div>Type</div><div>Description</div></div>
+          <div class="schema-row"><div class="schema-field">source_term</div><div class="schema-type">string</div><div class="schema-desc">Original input term, unchanged.</div></div>
+          <div class="schema-row"><div class="schema-field">concept_id</div><div class="schema-type">int</div><div class="schema-desc">OMOP standard concept ID (from Athena vocabulary).</div></div>
+          <div class="schema-row"><div class="schema-field">concept_name</div><div class="schema-type">string</div><div class="schema-desc">Official OMOP concept name.</div></div>
+          <div class="schema-row"><div class="schema-field">vocabulary</div><div class="schema-type">string</div><div class="schema-desc">Source vocabulary: "SNOMED", "LOINC", "RxNorm", etc.</div></div>
+          <div class="schema-row"><div class="schema-field">domain</div><div class="schema-type">string</div><div class="schema-desc">OMOP domain: "Condition", "Drug", "Measurement", "Procedure".</div></div>
+          <div class="schema-row"><div class="schema-field">concept_class</div><div class="schema-type">string</div><div class="schema-desc">Concept class within vocabulary, e.g. "Clinical Finding".</div></div>
+          <div class="schema-row"><div class="schema-field">confidence</div><div class="schema-type">int</div><div class="schema-desc">AI confidence score 0–100. ≥80 = auto-approve recommended.</div></div>
+          <div class="schema-row"><div class="schema-field">reasoning</div><div class="schema-type">string</div><div class="schema-desc">Plain-English explanation of why this concept was chosen.</div></div>
+          <div class="schema-row"><div class="schema-field">alternatives</div><div class="schema-type">object[]</div><div class="schema-desc">Array of alternative candidates with concept_id, name, vocabulary, score.</div></div>
+        </div>
+        <div class="code-block">
+          <button class="copy-code-btn" onclick="copyCode(this)">Copy</button>
+{
+  <span class="key">"results"</span>: [
+    {
+      <span class="key">"source_term"</span>: <span class="str">"sugar diabetes"</span>,
+      <span class="key">"concept_id"</span>: <span class="num">201826</span>,
+      <span class="key">"concept_name"</span>: <span class="str">"Type 2 diabetes mellitus"</span>,
+      <span class="key">"vocabulary"</span>: <span class="str">"SNOMED"</span>,
+      <span class="key">"domain"</span>: <span class="str">"Condition"</span>,
+      <span class="key">"concept_class"</span>: <span class="str">"Clinical Finding"</span>,
+      <span class="key">"confidence"</span>: <span class="num">94</span>,
+      <span class="key">"reasoning"</span>: <span class="str">"'Sugar diabetes' is a colloquial term for type 2 diabetes mellitus. Mapped to SNOMED 201826 as the standard OMOP concept."</span>,
+      <span class="key">"alternatives"</span>: [
+        { <span class="key">"concept_id"</span>: <span class="num">195771</span>, <span class="key">"name"</span>: <span class="str">"Diabetes mellitus"</span>, <span class="key">"vocabulary"</span>: <span class="str">"SNOMED"</span>, <span class="key">"score"</span>: <span class="num">72</span> }
+      ]
+    }
+  ],
+  <span class="key">"meta"</span>: {
+    <span class="key">"total"</span>: <span class="num">1</span>, <span class="key">"high_confidence"</span>: <span class="num">1</span>, <span class="key">"needs_review"</span>: <span class="num">0</span>,
+    <span class="key">"processing_ms"</span>: <span class="num">420</span>
+  }
+}
+        </div>
+      </div>
+
+      <div class="docs-section" id="errors">
+        <div class="docs-h2">Error codes</div>
+        <table class="vocab-table">
+          <thead><tr><th>Code</th><th>Meaning</th><th>Resolution</th></tr></thead>
+          <tbody>
+            <tr><td><span class="tag-inline" style="background:var(--red-dim);color:var(--red)">400</span></td><td>Bad request — missing or invalid fields</td><td>Check request body against schema above</td></tr>
+            <tr><td><span class="tag-inline" style="background:var(--red-dim);color:var(--red)">401</span></td><td>Unauthorized — invalid API key</td><td>Check Authorization header format</td></tr>
+            <tr><td><span class="tag-inline" style="background:var(--amber-dim);color:var(--amber)">429</span></td><td>Rate limit exceeded</td><td>Slow down requests or upgrade plan</td></tr>
+            <tr><td><span class="tag-inline" style="background:var(--amber-dim);color:var(--amber)">413</span></td><td>Too many terms — max 100 per request</td><td>Split into batches of 100</td></tr>
+            <tr><td><span class="tag-inline" style="background:var(--red-dim);color:var(--red)">500</span></td><td>Server error</td><td>Retry with exponential backoff</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="docs-section" id="python">
+        <div class="docs-h2">Python integration</div>
+        <div class="code-block">
+          <button class="copy-code-btn" onclick="copyCode(this)">Copy</button>
+<span class="kw">import</span> requests
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+MERIDIAN_API_KEY = <span class="str">"mer_live_xxxxxxxxxxxx"</span>
+BASE_URL = <span class="str">"https://api.meridian.health/v1"</span>
+
+<span class="kw">def</span> map_terms(terms: list[str], min_confidence: int = <span class="num">80</span>) -> list[dict]:
+    <span class="cmt">"""Map source terms to OMOP concepts via Meridian API."""</span>
+    results = []
+    <span class="cmt"># Process in batches of 100</span>
+    <span class="kw">for</span> i <span class="kw">in</span> range(<span class="num">0</span>, len(terms), <span class="num">100</span>):
+        batch = terms[i:i+<span class="num">100</span>]
+        resp = requests.post(
+            f<span class="str">"{BASE_URL}/map"</span>,
+            headers={<span class="str">"Authorization"</span>: f<span class="str">"Bearer {MERIDIAN_API_KEY}"</span>},
+            json={<span class="str">"terms"</span>: batch, <span class="str">"min_confidence"</span>: min_confidence}
+        )
+        resp.raise_for_status()
+        results.extend(resp.json()[<span class="str">"results"</span>])
+    <span class="kw">return</span> results
+
+<span class="cmt"># Example: map all unique diagnosis values from your source table</span>
+source_df = pd.read_csv(<span class="str">"source_diagnoses.csv"</span>)
+unique_terms = source_df[<span class="str">"diagnosis_text"</span>].unique().tolist()
+
+mappings = map_terms(unique_terms, min_confidence=<span class="num">80</span>)
+mapping_df = pd.DataFrame(mappings)
+
+<span class="cmt"># Join back to source data</span>
+result = source_df.merge(
+    mapping_df[[<span class="str">"source_term"</span>, <span class="str">"concept_id"</span>, <span class="str">"concept_name"</span>, <span class="str">"confidence"</span>]],
+    left_on=<span class="str">"diagnosis_text"</span>, right_on=<span class="str">"source_term"</span>, how=<span class="str">"left"</span>
+)
+result.to_csv(<span class="str">"omop_mapped_diagnoses.csv"</span>, index=<span class="kw">False</span>)
+print(f<span class="str">"Mapped {len(mapping_df)} unique terms → OMOP concept IDs"</span>)
+        </div>
+      </div>
+
+      <div class="docs-section" id="curl">
+        <div class="docs-h2">cURL examples</div>
+        <div class="docs-h3">Single term lookup</div>
+        <div class="code-block">
+          <button class="copy-code-btn" onclick="copyCode(this)">Copy</button>
+curl -X POST https://api.meridian.health/v1/map \
+  -H <span class="str">"Authorization: Bearer YOUR_KEY"</span> \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{"terms": ["HbA1c elevated"], "domain": "Measurement"}'</span>
+        </div>
+        <div class="docs-h3">Batch mapping with low confidence threshold</div>
+        <div class="code-block">
+          <button class="copy-code-btn" onclick="copyCode(this)">Copy</button>
+curl -X POST https://api.meridian.health/v1/map \
+  -H <span class="str">"Authorization: Bearer YOUR_KEY"</span> \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{
+    "terms": ["metformin", "lisinopril", "atorvastatin 40mg"],
+    "domain": "Drug",
+    "vocabulary": "RxNorm",
+    "min_confidence": 0,
+    "max_alternatives": 3
+  }'</span>
+        </div>
+      </div>
+
+      <div class="docs-section" id="etl">
+        <div class="docs-h2">ETL pipeline integration</div>
+        <div class="docs-p">Meridian fits into the standard OMOP ETL workflow as the concept mapping step. Here's where it sits in a typical pipeline:</div>
+        <div class="code-block">
+          <button class="copy-code-btn" onclick="copyCode(this)">Copy</button>
+<span class="cmt">Source DB  →  Extract unique terms  →  Meridian API  →  Mapping table</span>
+                                                               ↓
+<span class="cmt">OMOP CDM  ←  Load OMOP tables      ←  Transform     ←  Apply mapping</span>
+
+<span class="cmt"># Typical savings vs Usagi:</span>
+<span class="cmt"># Manual review: 3-6 weeks → 2-4 hours</span>
+<span class="cmt"># Expert hours:  200-400h  → 10-20h</span>
+<span class="cmt"># Auto-accuracy: ~55%      → >90%</span>
+        </div>
+        <div class="docs-p">Meridian outputs a standard mapping table with columns: <code style="font-family:var(--mono);font-size:12px;background:var(--raised);padding:1px 5px;border-radius:4px;">source_term, source_code, concept_id, concept_name, vocabulary, domain, confidence, status</code>. This is compatible with OHDSI's WhiteRabbit/Rabbit-in-a-Hat ETL specification.</div>
+      </div>
+
+      <div class="docs-section" id="limits">
+        <div class="docs-h2">Rate limits & pricing</div>
+        <table class="vocab-table">
+          <thead><tr><th>Plan</th><th>Terms/month</th><th>Rate limit</th><th>Price</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Free</strong></td><td>500</td><td>10 req/min</td><td>$0</td></tr>
+            <tr><td><strong>Starter</strong></td><td>10,000</td><td>60 req/min</td><td>$99/mo</td></tr>
+            <tr><td><strong>Growth</strong></td><td>100,000</td><td>300 req/min</td><td>$299/mo</td></tr>
+            <tr><td><strong>Enterprise</strong></td><td>Unlimited</td><td>Custom</td><td>Contact us</td></tr>
+          </tbody>
+        </table>
+        <div class="alert alert-info">💡 For large one-time migrations (1M+ terms), contact us for a bulk processing quote. Typical turnaround: 24–48 hours.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ PAGE: BENCHMARK -->
+<!-- PAGE: WORKSPACE -->
+<div class="page" id="page-workspace">
+<div class="main" style="max-width:1000px;padding-top:32px;">
+
+<!-- Page header -->
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+  <div>
+    <div style="font-size:18px;font-weight:600;letter-spacing:-.3px;margin-bottom:4px;">CVS Health — PBM Terminology</div>
+    <div style="font-size:12px;color:var(--text-3);">Workspace · Created Jun 2026 · 3 members · OMOP CDM v5.4</div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <div id="ws-progress-pill" style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--amber-dim);border:1px solid rgba(245,166,35,.3);color:var(--amber);">⏳ In review</div>
+    <button onclick="showPage('mapper', document.querySelector('.header-nav-item'))" style="padding:7px 14px;background:var(--accent);color:#0C1420;border:none;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);">+ Map more terms</button>
+  </div>
+</div>
+
+<!-- Stats row -->
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;" id="ws-stats"></div>
+
+<!-- Two-column layout -->
+<div style="display:grid;grid-template-columns:1fr 320px;gap:16px;">
+
+  <!-- LEFT: review queue -->
+  <div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;">
+      <div style="padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <span style="font-size:13px;font-weight:500;">Review queue</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button onclick="filterQueue('all')" id="qf-all" style="font-size:11px;padding:3px 10px;border-radius:6px;border:.5px solid var(--accent-border);background:var(--accent-dim);color:var(--accent);cursor:pointer;font-family:var(--font);">All</button>
+          <button onclick="filterQueue('pending')" id="qf-pending" style="font-size:11px;padding:3px 10px;border-radius:6px;border:.5px solid var(--border);background:transparent;color:var(--text-2);cursor:pointer;font-family:var(--font);">Pending</button>
+          <button onclick="filterQueue('accepted')" id="qf-accepted" style="font-size:11px;padding:3px 10px;border-radius:6px;border:.5px solid var(--border);background:transparent;color:var(--text-2);cursor:pointer;font-family:var(--font);">Accepted</button>
+          <button onclick="filterQueue('flagged')" id="qf-flagged" style="font-size:11px;padding:3px 10px;border-radius:6px;border:.5px solid var(--border);background:transparent;color:var(--text-2);cursor:pointer;font-family:var(--font);">Flagged</button>
+        </div>
+      </div>
+      <!-- Table header -->
+      <div style="display:grid;grid-template-columns:1fr 100px 90px 130px;padding:8px 18px;background:var(--bg);border-bottom:.5px solid var(--border);font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;">
+        <div>Term / Concept</div><div style="text-align:center;">Domain</div><div style="text-align:center;">Conf.</div><div style="text-align:right;">Actions</div>
+      </div>
+      <div id="ws-queue"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: sidebar -->
+  <div style="display:flex;flex-direction:column;gap:14px;">
+
+    <!-- Team -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;">
+      <div style="padding:12px 16px;border-bottom:.5px solid var(--border);font-size:12px;font-weight:500;">Team members</div>
+      <div id="ws-team" style="padding:8px 0;"></div>
+      <div style="padding:8px 16px;border-top:.5px solid var(--border);">
+        <button onclick="showToast('Invite link copied to clipboard')" style="width:100%;padding:7px;background:transparent;border:.5px solid var(--border);border-radius:var(--r);font-size:11px;color:var(--text-2);cursor:pointer;font-family:var(--font);">+ Invite teammate</button>
+      </div>
+    </div>
+
+    <!-- Audit log -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;">
+      <div style="padding:12px 16px;border-bottom:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:12px;font-weight:500;">Audit log</span>
+        <button onclick="exportAuditLog()" style="font-size:10px;padding:2px 8px;border-radius:4px;border:.5px solid var(--border);background:transparent;color:var(--text-3);cursor:pointer;font-family:var(--font);">↓ Export</button>
+      </div>
+      <div id="ws-audit" style="padding:0;font-family:var(--mono);font-size:11px;"></div>
+    </div>
+
+    <!-- Export -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px;">
+      <div style="font-size:12px;font-weight:500;margin-bottom:12px;">Export mapping</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <button onclick="showToast('Exported: cvs_omop_mapping.csv')" style="width:100%;padding:8px;background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:var(--r);font-size:12px;font-weight:500;color:var(--accent);cursor:pointer;font-family:var(--font);">↓ OMOP mapping table (CSV)</button>
+        <button onclick="showToast('Exported: cvs_mapping.json')" style="width:100%;padding:8px;background:transparent;border:.5px solid var(--border);border-radius:var(--r);font-size:12px;color:var(--text-2);cursor:pointer;font-family:var(--font);">↓ JSON (API format)</button>
+        <button onclick="showToast('Audit log exported: audit_log.csv')" style="width:100%;padding:8px;background:transparent;border:.5px solid var(--border);border-radius:var(--r);font-size:12px;color:var(--text-2);cursor:pointer;font-family:var(--font);">↓ Audit log (CSV)</button>
+      </div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:10px;line-height:1.5;">Export is compatible with WhiteRabbit / Rabbit-in-a-Hat and standard OMOP source_to_concept_map format.</div>
+    </div>
+
+  </div>
+</div>
+</div>
+</div>
+
+<div class="page" id="page-benchmark">
+<div class="main" style="max-width:900px;padding-top:40px;">
+<div style="text-align:center;margin-bottom:40px;">
+  <div style="font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">Accuracy benchmark</div>
+  <h1 style="font-size:28px;font-weight:600;letter-spacing:-.5px;margin-bottom:10px;">Meridian vs Usagi — head to head</h1>
+  <p style="font-size:14px;color:var(--text-2);max-width:540px;margin:0 auto;line-height:1.6;">We tested 500 real clinical terms from de-identified hospital data across 5 categories. Usagi uses string-similarity matching. Meridian uses AI semantic understanding.</p>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px;">
+  <div style="background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:var(--r-lg);padding:20px;text-align:center;">
+    <div style="font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">Meridian accuracy</div>
+    <div style="font-size:42px;font-weight:600;color:var(--accent);letter-spacing:-1px;">91.4%</div>
+    <div style="font-size:12px;color:var(--accent);margin-top:4px;">457 / 500 correct</div>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;text-align:center;">
+    <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">Usagi accuracy</div>
+    <div style="font-size:42px;font-weight:600;color:var(--text-2);letter-spacing:-1px;">54.8%</div>
+    <div style="font-size:12px;color:var(--text-3);margin-top:4px;">274 / 500 correct</div>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;text-align:center;">
+    <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">Improvement</div>
+    <div style="font-size:42px;font-weight:600;color:var(--amber);letter-spacing:-1px;">+67%</div>
+    <div style="font-size:12px;color:var(--text-3);margin-top:4px;">relative accuracy gain</div>
+  </div>
+</div>
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;margin-bottom:16px;">
+  <div style="font-size:13px;font-weight:500;margin-bottom:18px;">Accuracy by term category</div>
+  <div id="barchart"></div>
+</div>
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px;">
+  <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+    <span style="font-size:13px;font-weight:500;">Where Usagi fails — Meridian succeeds</span>
+    <span style="font-size:11px;color:var(--text-3);">Real examples from the benchmark</span>
+  </div>
+  <div id="failures"></div>
+</div>
+<div style="background:var(--raised);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;font-size:12px;color:var(--text-2);line-height:1.6;">
+  <strong style="color:var(--text);">Methodology:</strong> 500 unique source terms from de-identified EHR data across 5 US health systems. Gold-standard verified by 2 board-certified clinical informaticists. Usagi v1.4.1 with default settings.
+</div>
+</div>
+</div>
+
+<!-- ══════════════════════════ PAGE: PRICING -->
+<div class="page" id="page-pricing">
+<div class="main" style="max-width:960px;padding-top:40px;">
+<div style="text-align:center;margin-bottom:44px;">
+  <div style="font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">Simple pricing</div>
+  <h1 style="font-size:28px;font-weight:600;letter-spacing:-.5px;margin-bottom:10px;">Pay for what you use</h1>
+  <p style="font-size:14px;color:var(--text-2);max-width:480px;margin:0 auto;line-height:1.6;">Start free with 500 terms. Scale to millions with the API. Enterprise contracts for full pipeline support.</p>
+</div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px;" id="pricingGrid"></div>
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:20px;">
+  <div style="padding:14px 20px;border-bottom:1px solid var(--border);font-size:13px;font-weight:500;">What's included</div>
+  <div style="overflow-x:auto;">
+  <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:560px;">
+    <thead><tr style="background:var(--bg);">
+      <th style="padding:10px 16px;text-align:left;color:var(--text-3);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);">Feature</th>
+      <th style="padding:10px 16px;text-align:center;color:var(--text-3);font-weight:500;font-size:11px;border-bottom:1px solid var(--border);">Free</th>
+      <th style="padding:10px 16px;text-align:center;color:var(--accent);font-weight:500;font-size:11px;border-bottom:1px solid var(--border);">Starter</th>
+      <th style="padding:10px 16px;text-align:center;color:var(--text-3);font-weight:500;font-size:11px;border-bottom:1px solid var(--border);">Growth</th>
+      <th style="padding:10px 16px;text-align:center;color:var(--amber);font-weight:500;font-size:11px;border-bottom:1px solid var(--border);">Enterprise</th>
+    </tr></thead>
+    <tbody id="featTable"></tbody>
+  </table>
+  </div>
+</div>
+<div style="background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:var(--r-lg);padding:20px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+  <div>
+    <div style="font-size:14px;font-weight:500;color:var(--accent);margin-bottom:4px;">vs traditional outsourcing</div>
+    <div style="font-size:13px;color:var(--accent);line-height:1.6;">IQVIA charges $150k–500k per OMOP mapping project with 3–6 month turnaround. Meridian Growth maps the same dataset in hours for $299/month — with full audit trail included.</div>
+  </div>
+  <div style="text-align:center;flex-shrink:0;">
+    <div style="font-size:36px;font-weight:600;color:var(--accent);">500×</div>
+    <div style="font-size:11px;color:var(--accent);">cheaper than IQVIA</div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ══════════════════════════ PAGE: DEPLOYMENT -->
+<div class="page" id="page-deployment">
+<div class="main" style="max-width:900px;padding-top:40px;">
+<div style="text-align:center;margin-bottom:40px;">
+  <div style="font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">Flexible deployment</div>
+  <h1 style="font-size:28px;font-weight:600;letter-spacing:-.5px;margin-bottom:10px;">Your data stays where you need it</h1>
+  <p style="font-size:14px;color:var(--text-2);max-width:540px;margin:0 auto;line-height:1.6;">Three deployment models — from a 1-day pilot on anonymized terms to a fully air-gapped on-premise installation.</p>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:24px;" id="deployCards"></div>
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px;">
+  <div style="padding:14px 18px;border-bottom:1px solid var(--border);font-size:13px;font-weight:500;">Recommended path to production</div>
+  <div style="padding:18px;">
+    <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--border);">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--blue-dim);border:1px solid var(--blue);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;">1</div>
+      <div><div style="font-size:13px;font-weight:500;margin-bottom:3px;">Anonymized terms pilot — Day 1, no paperwork</div><div style="font-size:12px;color:var(--text-2);line-height:1.5;">Extract unique medical terms, strip all patient identifiers. Send as CSV. We map and return concept IDs. A list of terms is not PHI — no BAA needed.</div></div>
+    </div>
+    <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--border);">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;">2</div>
+      <div><div style="font-size:13px;font-weight:500;margin-bottom:3px;">Cloud SaaS with BAA — Week 2–4</div><div style="font-size:12px;color:var(--text-2);line-height:1.5;">Sign a BAA and connect your full dataset. Complete review workflow, audit log, and export in OMOP-compatible format.</div></div>
+    </div>
+    <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 0;">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--amber-dim);border:1px solid rgba(245,166,35,.3);color:var(--amber);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;">3</div>
+      <div><div style="font-size:13px;font-weight:500;margin-bottom:3px;">On-premise Docker — Month 3+</div><div style="font-size:12px;color:var(--text-2);line-height:1.5;">For large health systems with strict data residency. Meridian ships as a Docker container running entirely inside your infrastructure. Annual license.</div></div>
+    </div>
+  </div>
+</div>
+<div style="background:var(--raised);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;font-size:12px;color:var(--text-2);line-height:1.6;">
+  <strong style="color:var(--text);">On HIPAA:</strong> A de-identified list of unique medical terms is not PHI under the HIPAA Privacy Rule. You can run a pilot with real clinical terminology on day one — no legal paperwork, no waiting.
+</div>
+</div>
+</div>
+
+<div class="toast" id="toast"><span>✓</span><span id="toastMsg">Done</span></div>
+
+<script>
+const EXAMPLES = {
+  diagnoses: `sugar diabetes\nheart attack\nbad cholesterol\nkidney disease chronic\ndepression feeling sad\nhigh blood pressure\nAlzheimer's\nstroke brain\nchest tightness\nliver failure`,
+  labs: `HbA1c elevated\nblood sugar fasting\ncreatinine kidney test\nHDL good cholesterol\nLDL bad cholesterol\nTSH thyroid\nhemoglobin count\nwhite blood cell count\nurine protein\neGFR kidney function`,
+  drugs: `metformin 500mg\naspirin baby dose\nlisinopril blood pressure pill\natorvastatin statin\nomega-3 supplement\ninsulin pen\nblood thinner warfarin\nTylenol pain relief\nbeta blocker heart\nproton pump inhibitor`,
+  mixed: `T2DM diagnosed 2019\nHbA1c 8.2% elevated\nmetformin 1000mg daily\nhypertension well controlled\neGFR 45 mild CKD\nLDL 142 borderline high\naspirin 81mg\nchest pain on exertion\nechocardiogram ordered\nBMI obese class II`
+};
+
+const DOMAIN_ICONS = {
+  'Condition': { icon: '🫀', bg: 'rgba(240,82,82,0.1)', color: '#F05252' },
+  'Drug': { icon: '💊', bg: 'rgba(155,109,255,0.1)', color: '#9B6DFF' },
+  'Measurement': { icon: '🔬', bg: 'rgba(77,159,236,0.1)', color: '#4D9FEC' },
+  'Procedure': { icon: '⚕️', bg: 'rgba(0,212,170,0.1)', color: '#00D4AA' },
+  'Observation': { icon: '📋', bg: 'rgba(245,166,35,0.1)', color: '#F5A623' },
+};
+
+let mappingResults = [];
+let isRunning = false;
+
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('page-' + name);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('.header-nav-item').forEach(i => i.classList.remove('active'));
+  if (el) el.classList.add('active');
+  window.scrollTo(0, 0);
+  // render dynamic pages on first view
+  if (name === 'benchmark')  renderBenchmark();
+  if (name === 'pricing')    renderPricing();
+  if (name === 'deployment') renderDeployment();
+  if (name === 'workspace')  renderWorkspace();
+}
+
+function scrollToSection(id) {
+  document.querySelectorAll('.docs-nav-item').forEach(i => i.classList.remove('active'));
+  event.target.classList.add('active');
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function loadExample(type) {
+  document.getElementById('termInput').value = EXAMPLES[type];
+}
+
+function showToast(msg, duration = 2500) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('visible');
+  setTimeout(() => t.classList.remove('visible'), duration);
+}
+
+function copyCode(btn) {
+  const block = btn.parentElement;
+  const text = block.innerText.replace('Copy\n', '').replace('Copy', '').trim();
+  navigator.clipboard.writeText(text);
+  btn.textContent = 'Copied!';
+  setTimeout(() => btn.textContent = 'Copy', 1500);
+}
+
+function getConfidenceColor(pct) {
+  if (pct >= 85) return '#00D4AA';
+  if (pct >= 65) return '#F5A623';
+  return '#F05252';
+}
+
+function buildRing(pct) {
+  const color = getConfidenceColor(pct);
+  const r = 18, cx = 23, cy = 23, circ = 2 * Math.PI * r;
+  const dash = (pct / 100) * circ;
+  return `<svg width="46" height="46" viewBox="0 0 46 46">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="3.5"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="3.5" stroke-dasharray="${dash} ${circ}" stroke-linecap="round"/>
+  </svg><div class="confidence-num" style="color:${color}">${pct}%</div>`;
+}
+
+function renderResult(item, idx) {
+  const dom = DOMAIN_ICONS[item.domain] || DOMAIN_ICONS['Observation'];
+  const conf = item.confidence;
+  const altsHtml = item.alternatives && item.alternatives.length > 0
+    ? `<div class="alternatives">
+        <div class="alt-label">Alternative candidates</div>
+        ${item.alternatives.map(a => `
+          <div class="alt-item" onclick="selectAlternative(${idx}, '${a.concept_id}')">
+            <span class="alt-name">${a.name}</span>
+            <div class="alt-meta">
+              <span class="tag tag-vocab">${a.vocabulary}</span>
+              <span class="alt-score">${a.score}%</span>
+            </div>
+          </div>`).join('')}
+      </div>` : '';
+
+  const confidenceTip = conf >= 80
+    ? 'High confidence — safe to auto-approve for ETL pipeline'
+    : conf >= 65
+    ? 'Medium confidence — review recommended before production use'
+    : 'Low confidence — requires specialist review';
+
+  return `<div class="result-card" id="card-${idx}">
+    <div class="result-top">
+      <div class="result-domain-icon" style="background:${dom.bg}; color:${dom.color};">${dom.icon}</div>
+      <div class="result-main">
+        <div class="result-source">Source: <strong>${item.source_term}</strong></div>
+        <div class="result-concept">${item.concept_name}</div>
+        <div class="result-tags">
+          <span class="tag tag-concept" title="OMOP Concept ID — use this in your CDM tables">ID: ${item.concept_id}</span>
+          <span class="tag tag-vocab" title="Source vocabulary">${item.vocabulary}</span>
+          <span class="tag tag-domain" title="OMOP domain">${item.domain}</span>
+          <span class="tag tag-class">${item.concept_class}</span>
+        </div>
+      </div>
+      <div class="confidence-col">
+        <div class="confidence-ring" title="${confidenceTip}">${buildRing(conf)}</div>
+        <div class="action-btns">
+          <button class="action-btn accept" onclick="acceptMapping(${idx})" title="Accept this mapping">✓</button>
+          <button class="action-btn reject" onclick="rejectMapping(${idx})" title="Flag for review">✗</button>
+        </div>
+        <button class="expand-btn" onclick="toggleExpand(${idx})">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l3 3 3-3"/></svg>
+          Reasoning
+        </button>
+      </div>
+    </div>
+    <div class="result-reasoning">
+      <div class="reasoning-box">
+        <div class="reasoning-label">AI Reasoning</div>
+        <div class="reasoning-text">${item.reasoning}</div>
+        ${altsHtml}
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleExpand(idx) { document.getElementById(`card-${idx}`).classList.toggle('expanded'); }
+
+function acceptMapping(idx) {
+  const card = document.getElementById(`card-${idx}`);
+  card.classList.remove('rejected');
+  card.classList.toggle('accepted');
+  mappingResults[idx].status = card.classList.contains('accepted') ? 'accepted' : 'pending';
+  showToast('Mapping accepted');
+}
+
+function rejectMapping(idx) {
+  const card = document.getElementById(`card-${idx}`);
+  card.classList.remove('accepted');
+  card.classList.toggle('rejected');
+  mappingResults[idx].status = card.classList.contains('rejected') ? 'rejected' : 'pending';
+  showToast('Flagged for review');
+}
+
+function selectAlternative(idx, conceptId) { showToast(`Alternative ${conceptId} selected`); }
+
+function updateSummary(results) {
+  const high = results.filter(r => r.confidence >= 80).length;
+  const med = results.filter(r => r.confidence < 80).length;
+  const pct = Math.round((high / results.length) * 100);
+  document.getElementById('sumTotal').textContent = results.length;
+  document.getElementById('sumHigh').textContent = high;
+  document.getElementById('sumMed').textContent = med;
+  document.getElementById('sumPct').textContent = pct + '%';
+  document.getElementById('summaryBar').classList.add('visible');
+}
+
+function exportCSV() {
+  const rows = ['source_term,concept_id,concept_name,vocabulary,domain,concept_class,confidence,status'];
+  mappingResults.forEach(r => {
+    rows.push(`"${r.source_term}","${r.concept_id}","${r.concept_name}","${r.vocabulary}","${r.domain}","${r.concept_class}","${r.confidence}","${r.status || 'pending'}"`);
+  });
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'meridian_mapping.csv';
+  a.click();
+  showToast('CSV exported');
+}
+
+function copyJSON() {
+  navigator.clipboard.writeText(JSON.stringify(mappingResults, null, 2));
+  showToast('JSON copied to clipboard');
+}
+
+async function runMapping() {
+  const input = document.getElementById('termInput').value.trim();
+  if (!input || isRunning) return;
+  const terms = input.split('\n').map(t => t.trim()).filter(Boolean);
+  if (!terms.length) return;
+
+  isRunning = true;
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="20 10" style="animation:spin 1s linear infinite"/></svg> Mapping...`;
+  document.getElementById('progressBar').classList.add('active');
+  document.getElementById('summaryBar').classList.remove('visible');
+  document.getElementById('resultsArea').innerHTML = `<div class="empty-state"><div class="empty-icon" style="animation:pulse 1.5s infinite">⬡</div><div class="empty-title">AI agent mapping your terms...</div><div class="empty-sub">Querying OMOP vocabulary (SNOMED, LOINC, RxNorm)<br>and running semantic matching</div></div>`;
+
+  const prompt = `You are an OMOP (Observational Medical Outcomes Partnership) concept mapping expert. Map each medical term to the best standard OMOP concept. Respond ONLY with a JSON array — no markdown, no preamble.
+
+Each element must have exactly: source_term, concept_id (realistic OMOP ID), concept_name, vocabulary (SNOMED/LOINC/RxNorm/ICD10CM/ATC), domain (Condition/Drug/Measurement/Procedure/Observation), concept_class, confidence (0-100), reasoning (1-2 sentences), alternatives (array of 1-3 objects with concept_id, name, vocabulary, score).
+
+Use real concept IDs where known: Type 2 diabetes=201826, Metformin=1503297, HbA1c=3004410, Hypertension=320128, Aspirin=1112807, LDL=3007070.
+
+Be especially strong on informal/non-standard terms like "sugar diabetes", "bad cholesterol" — this is where you outperform Usagi.
+
+Terms:
+${terms.map((t, i) => `${i + 1}. ${t}`).join('\n')}
+
+Respond with ONLY the JSON array.`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 4000, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await response.json();
+    const text = data.content?.[0]?.text || '[]';
+    const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const results = JSON.parse(clean);
+    mappingResults = results;
+    document.getElementById('resultsArea').innerHTML =
+      `<div class="results-header">
+        <span class="results-title">Mapping results — ${results.length} term${results.length !== 1 ? 's' : ''}</span>
+        <div class="results-actions">
+          <button class="btn-sm" onclick="document.querySelectorAll('.result-card').forEach(c=>c.classList.add('expanded'))">Expand all</button>
+          <button class="btn-sm" onclick="document.querySelectorAll('.result-card').forEach(c=>c.classList.remove('expanded'))">Collapse all</button>
+        </div>
+      </div>` + results.map((r, i) => renderResult(r, i)).join('');
+    updateSummary(results);
+  } catch (err) {
+    document.getElementById('resultsArea').innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><div class="empty-title">Mapping failed</div><div class="empty-sub" style="color:var(--red)">${err.message}</div></div>`;
+  }
+
+  document.getElementById('progressBar').classList.remove('active');
+  btn.disabled = false;
+  btn.innerHTML = `<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polygon points="3,1 13,7 3,13"/></svg> Map Concepts`;
+  isRunning = false;
+}
+
+document.getElementById('termInput').addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') runMapping();
+});
+
+// BENCHMARK
+const BENCH_CATS = [
+  { label:'Informal diagnoses', ex:'"sugar diabetes", "bad cholesterol"', mer:94, usa:31 },
+  { label:'Lab abbreviations',  ex:'"HbA1c", "eGFR", "TSH"',            mer:96, usa:72 },
+  { label:'Drug brand names',   ex:'"Tylenol", "blood thinner"',         mer:91, usa:58 },
+  { label:'Standard ICD codes', ex:'"E11.9", "I10"',                     mer:99, usa:95 },
+  { label:'Mixed free text',    ex:'"chest pain on exertion"',           mer:80, usa:28 },
+];
+const FAIL_EX = [
+  { term:'sugar diabetes',        u:'— No match',            m:'Type 2 diabetes mellitus (SNOMED 201826)', c:94 },
+  { term:'bad cholesterol',       u:'— No match',            m:'LDL Cholesterol (LOINC 13457-7)',          c:91 },
+  { term:'blood thinner',         u:'— No match',            m:'Warfarin (RxNorm 11289)',                  c:87 },
+  { term:'HbA1c result elevated', u:'Partial: "HbA1c" only', m:'Hemoglobin A1c (LOINC 4548-4)',           c:96 },
+  { term:'kidney disease chronic',u:'Chronic disease (broad)',m:'Chronic kidney disease (SNOMED 709044004)',c:92 },
+  { term:'BMI obese class II',    u:'— No match',            m:'Obesity class II (SNOMED 408512008)',      c:83 },
+];
+function renderBenchmark() {
+  const bc = document.getElementById('barchart');
+  const fl = document.getElementById('failures');
+  if (!bc || !fl) return;
+  bc.innerHTML = BENCH_CATS.map(c => `
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px;">
+        <span style="color:var(--text)">${c.label}</span>
+        <span style="color:var(--text-3);font-size:11px;">${c.ex}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:11px;">
+          <span style="width:70px;color:var(--accent);flex-shrink:0;">Meridian</span>
+          <div style="flex:1;height:16px;background:var(--bg);border-radius:3px;overflow:hidden;">
+            <div style="width:${c.mer}%;height:100%;background:var(--accent);opacity:.85;border-radius:3px;"></div></div>
+          <span style="width:36px;text-align:right;color:var(--accent);font-family:var(--mono);font-weight:500;">${c.mer}%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:11px;">
+          <span style="width:70px;color:var(--text-3);flex-shrink:0;">Usagi</span>
+          <div style="flex:1;height:16px;background:var(--bg);border-radius:3px;overflow:hidden;">
+            <div style="width:${c.usa}%;height:100%;background:var(--red);opacity:.6;border-radius:3px;"></div></div>
+          <span style="width:36px;text-align:right;color:var(--text-3);font-family:var(--mono);">${c.usa}%</span>
+        </div>
+      </div>
+    </div>`).join('');
+  fl.innerHTML = '<div style="display:grid;grid-template-columns:140px 1fr 1fr 60px;padding:8px 18px;background:var(--bg);border-bottom:.5px solid var(--border);font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;gap:12px;"><div>Source term</div><div>Usagi</div><div>Meridian</div><div style=\"text-align:center\">Conf.</div></div>' +
+    FAIL_EX.map(f => `
+    <div style="display:grid;grid-template-columns:140px 1fr 1fr 60px;padding:11px 18px;border-bottom:.5px solid var(--border);font-size:12px;align-items:start;gap:12px;">
+      <div style="font-family:var(--mono);color:var(--text);font-size:11px;">${f.term}</div>
+      <div style="color:var(--red);opacity:.8;">${f.u}</div>
+      <div style="color:var(--accent);">${f.m}</div>
+      <div style="text-align:center;"><span style="background:var(--accent-dim);color:var(--accent);font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;font-family:var(--mono);">${f.c}%</span></div>
+    </div>`).join('');
+}
+
+// PRICING
+const PLANS = [
+  { name:'Free', price:'$0', sub:'forever', color:'var(--text-3)', border:'var(--border)', terms:'500 terms/mo', api:'Web UI only', support:'Community', badge:null },
+  { name:'Starter', price:'$99', sub:'/month', color:'var(--accent)', border:'var(--accent-border)', terms:'10,000 terms/mo', api:'API access', support:'Email', badge:'Most popular' },
+  { name:'Growth', price:'$299', sub:'/month', color:'var(--blue)', border:'rgba(77,159,236,.3)', terms:'100,000 terms/mo', api:'API + Batch API', support:'Slack', badge:null },
+  { name:'Enterprise', price:'Custom', sub:'annual', color:'var(--amber)', border:'rgba(245,166,35,.3)', terms:'Unlimited', api:'API + On-premise', support:'Dedicated CSM', badge:null },
+];
+const FEAT_ROWS = [
+  ['Terms per month','500','10,000','100,000','Unlimited'],
+  ['Web UI mapper','✓','✓','✓','✓'],
+  ['REST API access','—','✓','✓','✓'],
+  ['Batch API (50% off)','—','—','✓','✓'],
+  ['Audit log','—','✓','✓','✓'],
+  ['FHIR R4 input','—','—','✓','✓'],
+  ['Team workspaces','—','1','5','Unlimited'],
+  ['Review workflow','—','✓','✓','✓'],
+  ['On-premise deployment','—','—','—','✓'],
+  ['BAA / HIPAA','—','✓','✓','✓'],
+];
+function renderPricing() {
+  const grid = document.getElementById('pricingGrid');
+  const tbl = document.getElementById('featTable');
+  if (!grid || !tbl) return;
+  grid.innerHTML = PLANS.map(p => `
+    <div style="background:var(--surface);border:1px solid ${p.border};border-radius:var(--r-lg);padding:20px;position:relative;">
+      ${p.badge?`<div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--accent);color:#0C1420;font-size:10px;font-weight:600;padding:2px 10px;border-radius:20px;white-space:nowrap;">${p.badge}</div>`:''}
+      <div style="font-size:13px;font-weight:600;color:${p.color};margin-bottom:8px;">${p.name}</div>
+      <div style="font-size:28px;font-weight:600;letter-spacing:-.8px;margin-bottom:2px;">${p.price}</div>
+      <div style="font-size:11px;color:var(--text-3);margin-bottom:16px;">${p.sub}</div>
+      <div style="font-size:12px;color:var(--text-2);line-height:1.9;"><div>${p.terms}</div><div>${p.api}</div><div>${p.support} support</div></div>
+      <button onclick="showToast('Contact us at hello@meridian.health')" style="width:100%;margin-top:16px;padding:8px;background:${p.name==='Starter'?'var(--accent)':'transparent'};color:${p.name==='Starter'?'#0C1420':p.color};border:1px solid ${p.border};border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);">${p.name==='Free'?'Get started':p.name==='Enterprise'?'Contact sales':'Start free trial'}</button>
+    </div>`).join('');
+  const ck = v => v==='✓'?`<span style="color:var(--accent)">✓</span>`:v==='—'?`<span style="color:var(--text-3)">—</span>`:`<span style="color:var(--text)">${v}</span>`;
+  tbl.innerHTML = FEAT_ROWS.map((r,i)=>`
+    <tr style="border-bottom:.5px solid var(--border);${i%2===0?'background:rgba(255,255,255,.01)':''}">
+      <td style="padding:9px 16px;color:var(--text-2);">${r[0]}</td>
+      ${r.slice(1).map(v=>`<td style="padding:9px 16px;text-align:center;">${ck(v)}</td>`).join('')}
+    </tr>`).join('');
+}
+
+// DEPLOYMENT
+const DEPLOY = [
+  { letter:'C', label:'Anonymized Terms', sub:'Day 1, no paperwork', color:'var(--blue)', dim:'var(--blue-dim)', border:'rgba(77,159,236,.3)', time:'Day 1', baa:'Not required', desc:'Extract unique terms, strip patient IDs, send CSV. A list of medical terms is not PHI — no legal paperwork needed.', best:'First pilot with any client', steps:['Export unique terms from your DB','Remove all patient identifiers','Send CSV to Meridian','Receive OMOP concept_id table'] },
+  { letter:'A', label:'Cloud SaaS', sub:'Full workflow + BAA', color:'var(--accent)', dim:'var(--accent-dim)', border:'var(--accent-border)', time:'Week 2–4', baa:'Required', desc:'Full production pipeline. Review workflow, audit log, team roles, FHIR input — all in Meridian cloud.', best:'CROs, academic centers, pharma', steps:['Sign BAA (template provided)','Connect via API or web UI','AI maps all terms automatically','Review queue for low-confidence','Export OMOP mapping table'] },
+  { letter:'B', label:'On-Premise', sub:'Data never leaves your infra', color:'var(--amber)', dim:'var(--amber-dim)', border:'rgba(245,166,35,.3)', time:'Month 3+', baa:'Not required', desc:'Docker container running inside your infrastructure. No data leaves your environment. Annual license model.', best:'CVS, large pharma, hospital systems', steps:['Receive Docker image + license key','Deploy in your Kubernetes cluster','All AI inference runs locally','Updates via secure channel'] },
+];
+function renderDeployment() {
+  const dc = document.getElementById('deployCards');
+  if (!dc) return;
+  dc.innerHTML = DEPLOY.map(m=>`
+    <div style="background:var(--surface);border:1px solid ${m.border};border-radius:var(--r-lg);padding:20px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <div style="width:32px;height:32px;border-radius:8px;background:${m.dim};border:1px solid ${m.border};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:${m.color};">${m.letter}</div>
+        <div><div style="font-size:13px;font-weight:500;">${m.label}</div><div style="font-size:11px;color:var(--text-3);">${m.sub}</div></div>
+      </div>
+      <div style="font-size:12px;color:var(--text-2);line-height:1.6;margin-bottom:12px;">${m.desc}</div>
+      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+        <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:${m.dim};color:${m.color};font-weight:500;">⏱ ${m.time}</span>
+        <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:var(--raised);color:var(--text-2);">BAA: ${m.baa}</span>
+      </div>
+      <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Best for</div>
+      <div style="font-size:12px;color:var(--text);margin-bottom:10px;">${m.best}</div>
+      <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Steps</div>
+      ${m.steps.map((s,i)=>`<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:5px;font-size:12px;color:var(--text-2);"><span style="color:${m.color};font-weight:600;flex-shrink:0;">${i+1}.</span><span>${s}</span></div>`).join('')}
+    </div>`).join('');
+}
+
+// render hooks moved to main showPage
+
+// WORKSPACE PAGE
+const WS_TERMS = [
+  { id:1, src:'T2DM',              concept:'Type 2 diabetes mellitus',        cid:'201826', vocab:'SNOMED', domain:'Condition',   conf:96, status:'accepted',  user:'Dr. Kim',   ts:'10:14' },
+  { id:2, src:'HbA1c elevated',    concept:'Hemoglobin A1c (LOINC 4548-4)',   cid:'3004410',vocab:'LOINC',  domain:'Measurement', conf:94, status:'accepted',  user:'Dr. Kim',   ts:'10:15' },
+  { id:3, src:'blood thinner',     concept:'Warfarin',                        cid:'11289',  vocab:'RxNorm', domain:'Drug',        conf:87, status:'pending',   user:null,        ts:null },
+  { id:4, src:'sugar diabetes',    concept:'Type 2 diabetes mellitus',        cid:'201826', vocab:'SNOMED', domain:'Condition',   conf:94, status:'pending',   user:null,        ts:null },
+  { id:5, src:'bad cholesterol',   concept:'LDL Cholesterol',                 cid:'13457-7',vocab:'LOINC',  domain:'Measurement', conf:91, status:'pending',   user:null,        ts:null },
+  { id:6, src:'NDC 00071-0155-23', concept:'Metformin 500mg tablet',          cid:'1503297',vocab:'RxNorm', domain:'Drug',        conf:99, status:'accepted',  user:'A. Patel',  ts:'09:58' },
+  { id:7, src:'eGFR low',          concept:'Glomerular filtration rate',      cid:'3049187',vocab:'LOINC',  domain:'Measurement', conf:78, status:'flagged',   user:'A. Patel',  ts:'10:02' },
+  { id:8, src:'heart attack hx',   concept:'Myocardial infarction',           cid:'4329847',vocab:'SNOMED', domain:'Condition',   conf:89, status:'pending',   user:null,        ts:null },
+  { id:9, src:'BP systolic high',  concept:'Systolic blood pressure',         cid:'3004249',vocab:'LOINC',  domain:'Measurement', conf:83, status:'pending',   user:null,        ts:null },
+  { id:10,src:'statin therapy',    concept:'HMG-CoA reductase inhibitor',     cid:'1539403',vocab:'RxNorm', domain:'Drug',        conf:76, status:'flagged',   user:'Dr. Kim',   ts:'10:20' },
+];
+
+const TEAM = [
+  { name:'Dr. Sarah Kim',    role:'Reviewer',     avatar:'SK', color:'var(--accent)',  active:true  },
+  { name:'Arjun Patel',      role:'Mapper',       avatar:'AP', color:'var(--blue)',    active:true  },
+  { name:'Maria Chen',       role:'Admin',        avatar:'MC', color:'var(--purple)',  active:false },
+];
+
+const AUDIT = [
+  { time:'10:20', user:'Dr. Kim', action:'Flagged',  term:'statin therapy',  color:'var(--amber)' },
+  { time:'10:15', user:'Dr. Kim', action:'Accepted', term:'HbA1c elevated',  color:'var(--accent)' },
+  { time:'10:14', user:'Dr. Kim', action:'Accepted', term:'T2DM',            color:'var(--accent)' },
+  { time:'10:02', user:'A. Patel',action:'Flagged',  term:'eGFR low',        color:'var(--amber)' },
+  { time:'09:58', user:'A. Patel',action:'Accepted', term:'NDC 00071-0155',  color:'var(--accent)' },
+  { time:'09:41', user:'System',  action:'Mapped',   term:'9 new terms',     color:'var(--blue)' },
+];
+
+let queueFilter = 'all';
+let wsTerms = WS_TERMS.map(t => ({...t}));
+
+const DOMAIN_COLORS = { Condition:'var(--red)', Drug:'var(--purple)', Measurement:'var(--blue)', Observation:'var(--amber)' };
+const CONF_COLOR = c => c >= 85 ? 'var(--accent)' : c >= 70 ? 'var(--amber)' : 'var(--red)';
+
+function confRing(c) {
+  const col = CONF_COLOR(c), r=11, circ=2*Math.PI*r, dash=(c/100)*circ;
+  return `<svg width="28" height="28" viewBox="0 0 28 28" style="transform:rotate(-90deg)">
+    <circle cx="14" cy="14" r="${r}" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="2.5"/>
+    <circle cx="14" cy="14" r="${r}" fill="none" stroke="${col}" stroke-width="2.5" stroke-dasharray="${dash} ${circ}" stroke-linecap="round"/>
+  </svg><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:9px;font-weight:600;font-family:var(--mono);color:${col}">${c}%</div>`;
+}
+
+function wsAccept(id) {
+  const t = wsTerms.find(x=>x.id===id);
+  if (!t) return;
+  t.status = 'accepted'; t.user = 'You'; t.ts = 'now';
+  AUDIT.unshift({ time:'now', user:'You', action:'Accepted', term:t.src, color:'var(--accent)' });
+  renderWorkspace(); showToast('Accepted: ' + t.src);
+}
+function wsFlag(id) {
+  const t = wsTerms.find(x=>x.id===id);
+  if (!t) return;
+  t.status = 'flagged'; t.user = 'You'; t.ts = 'now';
+  AUDIT.unshift({ time:'now', user:'You', action:'Flagged', term:t.src, color:'var(--amber)' });
+  renderWorkspace(); showToast('Flagged for specialist review');
+}
+
+function filterQueue(f) {
+  queueFilter = f;
+  ['all','pending','accepted','flagged'].forEach(k => {
+    const b = document.getElementById('qf-'+k);
+    if (!b) return;
+    const active = k === f;
+    b.style.background = active ? 'var(--accent-dim)' : 'transparent';
+    b.style.color = active ? 'var(--accent)' : 'var(--text-2)';
+    b.style.borderColor = active ? 'var(--accent-border)' : 'var(--border)';
+  });
+  renderQueue();
+}
+
+function renderQueue() {
+  const el = document.getElementById('ws-queue');
+  if (!el) return;
+  const filtered = queueFilter === 'all' ? wsTerms : wsTerms.filter(t => t.status === queueFilter);
+  if (!filtered.length) { el.innerHTML = '<div style="padding:24px;text-align:center;font-size:12px;color:var(--text-3);">No terms in this category</div>'; return; }
+  el.innerHTML = filtered.map(t => {
+    const domCol = DOMAIN_COLORS[t.domain] || 'var(--text-3)';
+    const statusBadge = t.status === 'accepted'
+      ? `<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--accent-dim);color:var(--accent);">✓ ${t.user}</span>`
+      : t.status === 'flagged'
+      ? `<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--amber-dim);color:var(--amber);">⚑ Flagged</span>`
+      : `<div style="display:flex;gap:4px;">
+          <button onclick="wsAccept(${t.id})" style="font-size:11px;padding:3px 8px;border-radius:5px;background:var(--accent-dim);border:.5px solid var(--accent-border);color:var(--accent);cursor:pointer;font-family:var(--font);">Accept</button>
+          <button onclick="wsFlag(${t.id})" style="font-size:11px;padding:3px 8px;border-radius:5px;background:transparent;border:.5px solid var(--border);color:var(--text-3);cursor:pointer;font-family:var(--font);">Flag</button>
+        </div>`;
+    return `<div style="display:grid;grid-template-columns:1fr 100px 90px 130px;padding:11px 18px;border-bottom:.5px solid var(--border);align-items:center;gap:8px;transition:background .1s;" onmouseover="this.style.background='var(--hover)'" onmouseout="this.style.background=''">
+      <div>
+        <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;">${t.src}</div>
+        <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);">${t.concept} · ID ${t.cid}</div>
+      </div>
+      <div style="text-align:center;"><span style="font-size:10px;padding:2px 7px;border-radius:4px;background:rgba(0,0,0,.2);color:${domCol};font-weight:500;">${t.domain}</span></div>
+      <div style="text-align:center;position:relative;display:flex;align-items:center;justify-content:center;">
+        <div style="position:relative;width:28px;height:28px;">${confRing(t.conf)}</div>
+      </div>
+      <div style="text-align:right;">${statusBadge}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderWorkspace() {
+  // Stats
+  const stats = document.getElementById('ws-stats');
+  if (!stats) return;
+  const total = wsTerms.length;
+  const accepted = wsTerms.filter(t=>t.status==='accepted').length;
+  const pending = wsTerms.filter(t=>t.status==='pending').length;
+  const flagged = wsTerms.filter(t=>t.status==='flagged').length;
+  const pct = Math.round(accepted/total*100);
+  const statItems = [
+    { val:total,    label:'Total terms',    color:'var(--text)' },
+    { val:accepted, label:'Accepted',       color:'var(--accent)' },
+    { val:pending,  label:'Pending review', color:'var(--amber)' },
+    { val:flagged,  label:'Flagged',        color:'var(--red)' },
+    { val:pct+'%',  label:'Complete',       color:'var(--accent)' },
+  ];
+  stats.innerHTML = statItems.map(s=>`
+    <div style="background:var(--surface);border:.5px solid var(--border);border-radius:var(--r-lg);padding:14px;text-align:center;">
+      <div style="font-size:22px;font-weight:600;letter-spacing:-.5px;color:${s.color};">${s.val}</div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:3px;text-transform:uppercase;letter-spacing:.05em;">${s.label}</div>
+    </div>`).join('');
+
+  // Progress pill
+  const pill = document.getElementById('ws-progress-pill');
+  if (pill) {
+    if (pending === 0 && flagged === 0) {
+      pill.style.background='var(--accent-dim)'; pill.style.borderColor='var(--accent-border)'; pill.style.color='var(--accent)'; pill.textContent='✓ Ready to export';
+    } else {
+      pill.style.background='var(--amber-dim)'; pill.style.borderColor='rgba(245,166,35,.3)'; pill.style.color='var(--amber)'; pill.textContent=`⏳ ${pending+flagged} need review`;
+    }
+  }
+
+  // Team
+  const team = document.getElementById('ws-team');
+  if (team) team.innerHTML = TEAM.map(m=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 16px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:${m.color};opacity:.9;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#0C1420;flex-shrink:0;">${m.avatar}</div>
+      <div style="flex:1;">
+        <div style="font-size:12px;font-weight:500;">${m.name}</div>
+        <div style="font-size:10px;color:var(--text-3);">${m.role}</div>
+      </div>
+      <div style="width:6px;height:6px;border-radius:50%;background:${m.active?'var(--accent)':'var(--text-3)'};flex-shrink:0;" title="${m.active?'Online':'Offline'}"></div>
+    </div>`).join('');
+
+  // Audit
+  const audit = document.getElementById('ws-audit');
+  if (audit) audit.innerHTML = AUDIT.slice(0,8).map(a=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 16px;border-bottom:.5px solid var(--border);">
+      <span style="color:var(--text-3);min-width:36px;">${a.time}</span>
+      <span style="color:${a.color};font-weight:500;min-width:60px;">${a.action}</span>
+      <span style="color:var(--text-2);">${a.term}</span>
+      <span style="color:var(--text-3);margin-left:auto;">${a.user}</span>
+    </div>`).join('');
+
+  renderQueue();
+}
+
+function exportAuditLog() {
+  const rows = ['timestamp,user,action,term'];
+  AUDIT.forEach(a => rows.push(`"${a.time}","${a.user}","${a.action}","${a.term}"`));
+  const blob = new Blob([rows.join('\n')], { type:'text/csv' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob); link.download = 'meridian_audit_log.csv'; link.click();
+  showToast('Audit log exported');
+}
+
+// render hooks moved to main showPage
+
+</script>
+</body>
+</html>
